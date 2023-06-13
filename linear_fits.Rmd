@@ -1,0 +1,128 @@
+---
+title: "Attempted fits to Hypotheses"
+author: "Pi Nuessle and Judith Racusin"
+date: '2023-06-09'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyr)
+library(lattice)
+library(plotly)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r Hypothesis 1, echo=FALSE}
+H_1_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_1_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+H_1_Data_copy<-data.frame(H_1_Data)
+#names(H_1_Data_copy) <- NULL             # Delete column names
+#H_1_Data_copy                            # Print updated data
+cat("we had to remove burst ")
+cat(toString(H_1_Data[16, 'Name']))
+cat(", because it was an outlier in the linear model.")
+H_1_Data_copy<-H_1_Data_copy[-c(16), ]
+x<-log10(H_1_Data_copy$Prompt.Isotropic.Energy)
+y<-H_1_Data_copy$Avg..Afterglow.Decay.Rate
+mod1<-lm(y~x)
+par(mfrow=c(2,2))
+plot(mod1)
+anova(mod1)
+print(mod1)
+newx <- seq(min(x), max(x), length.out=100)
+preds <- predict(mod1, newdata=data.frame(x=newx), interval='confidence')
+par(mar=c(5,5,5,5))
+par(mfrow=c(1,1))
+plot(y~x, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Redshift-Corrected Afterglow Decay Rate 0.2-10 keV (photons s^-2, XRT)', width = 50), collapse = "\n"))
+abline(mod1)
+#add dashed lines for confidence bands
+lines(newx, preds[ ,3], lty = 'dashed', col = 'blue')
+lines(newx, preds[ ,2], lty = 'dashed', col = 'blue')
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r Hypothesis 2a, echo=FALSE}
+H_2a_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_2a_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+H_2a_Data_copy<-data.frame(H_2a_Data)
+names(H_2a_Data_copy) <- NULL             # Delete column names
+H_2a_Data_copy<-H_2a_Data_copy[-c(15), ] # Print updated data
+cat("we had to remove burst GRB")
+cat(toString(H_2a_Data[15, 'Name']))
+cat(", because it was an outlier in the linear model.")
+x<-log10(H_2a_Data_copy[[2]])
+y<-log10(H_2a_Data_copy[[3]])
+df <- data.frame(x = x, y = y)
+mod2a<-lm(y~x)
+par(mfrow=c(2,2))
+plot(mod2a)
+print(anova(mod2a))
+print(mod2a)
+#get predicted y values using regression equation
+newx <- seq(min(df$x), max(df$x), length.out=100)
+preds <- predict(mod2a, newdata = data.frame(x=newx), interval = 'confidence')
+par(mar=c(5,5,5,5))
+par(mfrow=c(1,1))
+plot(y~x, main='Uncolluminated Isotropic Energy Relationship for GRBs', xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"))
+abline(mod2a)
+#add dashed lines for confidence bands
+lines(newx, preds[ ,3], lty = 'dashed', col = 'blue')
+lines(newx, preds[ ,2], lty = 'dashed', col = 'blue')
+
+new_df <- subset(df, x > 51.5) 
+m=new_df$y
+n=new_df$x
+mod2a1<-lm(m~n)
+par(mfrow=c(2,2))
+plot(mod2a1)
+print(anova(mod2a1))
+print(mod2a1)
+#get predicted y values using regression equation
+newx <- seq(min(n), max(n), length.out=100)
+preds <- predict(mod2a1, newdata=data.frame(n=newx), interval='confidence')
+par(mar=c(5,5,5,5))
+par(mfrow=c(1,1))
+plot(new_df$y~new_df$x, main=paste(strwrap('Uncolluminated Isotropic Energy Relationship for GRBs', width = 50), collapse = "\n"), xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"))
+abline(mod2a1)
+#add dashed lines for confidence bands
+lines(newx, preds[ ,3], lty = 'dashed', col = 'blue')
+lines(newx, preds[ ,2], lty = 'dashed', col = 'blue')
+```
+
+```{r Hypothesis 2b, echo=FALSE}
+H_2b_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_2b_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+H_2b_Data_copy<-data.frame(H_2b_Data)
+#names(H_2b_Data_copy) <- NULL             # Delete column names
+long_list<-which(H_2b_Data_copy[[4]]>4.2)
+short_list<-which(H_2b_Data_copy[[4]]<=4.2)
+long_H_2b<-H_2b_Data_copy[long_list,]
+short_H_2b<-H_2b_Data_copy[short_list,]
+long_x<-log10(long_H_2b[[2]])
+long_y<-log10(long_H_2b[[3]])
+short_x<-log10(short_H_2b[[2]])
+short_y<-log10(short_H_2b[[3]])
+plot(long_x, long_y, col='blue', xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)")
+points(short_x, short_y, col='red')
+H_2b_Data_copy_1 <- drop_na(H_2b_Data_copy)
+x<-H_2b_Data_copy_1$Prompt.Fluence
+y<-H_2b_Data_copy_1$End.Plateau.Flux
+z<-H_2b_Data_copy_1$t90
+# z<-array(0, c(length(x),length(y)))
+# for (i in 1:length(x)){
+#   for (j in 1:length(y)){
+#     if (i==j){
+#       z[i,j]<-H_2b_Data_copy_1[i,"t90"]
+#     } 
+#   }
+# }
+plot_ly(x=x, y=y, z=z, type="scatter3d", mode="markers", color=z)
+# image(xtabs(z~x+y), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 50), collapse = "\n"))
+```
