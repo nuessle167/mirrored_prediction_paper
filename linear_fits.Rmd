@@ -3,57 +3,85 @@ title: "Attempted fits to Hypotheses"
 author: "Pi Nuessle and Judith Racusin"
 date: '2023-06-09'
 output: word_document
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
-library(tidyr)
-library(lattice)
 library(plotly)
+library(tidyr)
+library("scatterplot3d")
+library(plot3D)
 ```
 
-## R Markdown
+```{r defining the special bursts, echo=FALSE}
+Collapsars = c(050416461.0, 50525002.0, 050824966.0, 060218148.0, 060729800.0, 060904104.0, 070419447.0, 071025172.0, 071112772.0, 080319258.0, 081007224.0, 090618353.0, 091127976.0, 100316531.0, 100418882.0, 101219686.0, 101225776.0, 111209300.0, 111211928.0, 111228656.0, 120422300.0, 120714888.0, 120729455.0, 130215063.0, 130427324.0, 130702003.0, 130831544.0, 140206303.0, 140606133.0, 150818483.0, 161219783.0, 161228552.0, 171010792.0, 171205306.0, 180720598.0, 180728728.0, 190114872.0, 190829830.0, 200826187.0, 210210083.0, 211023545.0, 221009553.0, 200826187.0)
+Mergers=c(070809807.0, 130603659.0, 150101641.0, 160624477.0, 160821936.0, 170817528.0, 200522487.0, 060614530.0, 111005336.0, 120304248.0, 211211549.0, 230307655.0, 050509166.0, 050709942.0, 051210240.0, 070714207.0, 071227842.0, 080503518.0, 080905499.0, 090515198.0, 160303454.0)
+```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+The chunk that follows does a linear fit of the prompt isotropic energy against the average decay rate (possibly with redshift). While it is successful, the fit may not be significantly different from fitting nothing. I can actually prove this.
 
 ```{r Hypothesis 1, echo=FALSE}
-H_1_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_1_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+H_1_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_1_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric", "numeric"))
 H_1_Data_copy<-data.frame(H_1_Data)
 #names(H_1_Data_copy) <- NULL             # Delete column names
 #H_1_Data_copy                            # Print updated data
-cat("we had to remove burst ")
-cat(toString(H_1_Data[16, 'Name']))
-cat(", because it was an outlier in the linear model.")
+# cat("we had to remove bursts ")
+# # cat(toString(H_1_Data[16, 'Name']))
+# # cat(', ')
+# cat(toString(H_1_Data[21, 'Name']))
+# cat(', and')
+# cat(toString(H_1_Data[46, 'Name']))
+# cat(", because they were outliers in the linear model.")
+# H_1_Data_copy<-H_1_Data_copy[-c(10, 19, 27, 40, 43), ]
 H_1_Data_copy<-H_1_Data_copy[-c(16), ]
-x<-log10(H_1_Data_copy$Prompt.Isotropic.Energy)
+x<-H_1_Data_copy$Prompt.Isotropic.Energy
 y<-H_1_Data_copy$Avg..Afterglow.Decay.Rate
+z<-H_1_Data_copy$Redshift
 mod1<-lm(y~x)
+#mod1<-lm(y~x+z)
 par(mfrow=c(2,2))
 plot(mod1)
 anova(mod1)
 print(mod1)
 newx <- seq(min(x), max(x), length.out=100)
-preds <- predict(mod1, newdata=data.frame(x=newx), interval='confidence')
+# newz <- seq(min(z), max(z), length.out=100)
+preds <- predict(mod1, newdata=data.frame(x=newx), interval='prediction')
+# preds <- predict(mod1, newdata=data.frame(x=newx, z=newz), interval='confidence')
 par(mar=c(5,5,5,5))
 par(mfrow=c(1,1))
-plot(y~x, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Redshift-Corrected Afterglow Decay Rate 0.2-10 keV (photons s^-2, XRT)', width = 50), collapse = "\n"))
+collapsar_mask=H_1_Data_copy$Name %in% Collapsars
+merger_mask=H_1_Data_copy$Name %in% Mergers
+H_1_Data_collapsars=H_1_Data_copy[collapsar_mask, ]
+H_1_Data_mergers=H_1_Data_copy[merger_mask, ]
+H_1_Data_unknown=H_1_Data_copy[!c(collapsar_mask+merger_mask), ]
+plot(H_1_Data_unknown$Avg..Afterglow.Decay.Rate~H_1_Data_unknown$Prompt.Isotropic.Energy, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Redshift-Corrected Afterglow Decay Rate 0.2-10 keV (photons s^-2, XRT)', width = 50), collapse = "\n"), main=paste(strwrap('Uncollumated Energy and Average Afterglow Decay Lack of a Relationship', width = 50), collapse = "\n"), log="x", pch=20,)
+# points(H_1_Data_mergers$Avg..Afterglow.Decay.Rate~H_1_Data_mergers$Prompt.Isotropic.Energy, pch=11, col='red')
+points(H_1_Data_collapsars$Avg..Afterglow.Decay.Rate~H_1_Data_collapsars$Prompt.Isotropic.Energy, pch=8, col='blue')
 abline(mod1)
 #add dashed lines for confidence bands
-lines(newx, preds[ ,3], lty = 'dashed', col = 'blue')
-lines(newx, preds[ ,2], lty = 'dashed', col = 'blue')
+lines(newx, preds[ ,3], lty = 'dashed', col ='green')
+lines(newx, preds[ ,2], lty = 'dashed', col = 'green')
+legend("topleft",
+       legend = c('Unknown', 'Collapsars'),
+       col = c('black', 'blue'),
+       pch = c(20, 8))
+print("All the work done above is fitting the actual data. Below, I calculate a 99% confidence interval for the slope, (which is our significance level) to see if a linear relationship exists. If zero is in that interval, then the null hypothesis that no such relationship exists cannot be rejected, and I have to move on.")
+cat("the upper limit for this interval is: ")
+cat(mod1$coefficients[2]-qt(0.99, 48)*mod1$coefficients[1])
+cat(" and the lower limit is ")
+cat(mod1$coefficients[2]+qt(0.99, 48)*mod1$coefficients[1])
+cat(", meaning that the null hypothesis cannot be rejected, and it is possible that no linear relationship exists between the GBM prompt isotropic energy and average XRT x-ray decay rate, despite the result in BAT.")
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
+What follows is the plots for the second hypothesis, linking the prompt and afterglow isotropic energies as derived in the python code. As one can see, this relationship does have good significance in addition to its clear physical relevance to both the burst mechanism and the circumburst environment.
 
 ```{r Hypothesis 2a, echo=FALSE}
 H_2a_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_2a_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
 H_2a_Data_copy<-data.frame(H_2a_Data)
-names(H_2a_Data_copy) <- NULL             # Delete column names
+# names(H_2a_Data_copy) <- NULL             # Delete column names
 H_2a_Data_copy<-H_2a_Data_copy[-c(15), ] # Print updated data
 cat("we had to remove burst GRB")
 cat(toString(H_2a_Data[15, 'Name']))
@@ -71,11 +99,24 @@ newx <- seq(min(df$x), max(df$x), length.out=100)
 preds <- predict(mod2a, newdata = data.frame(x=newx), interval = 'confidence')
 par(mar=c(5,5,5,5))
 par(mfrow=c(1,1))
-plot(y~x, main='Uncolluminated Isotropic Energy Relationship for GRBs', xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"))
+collapsar_mask=H_2a_Data_copy$Name %in% Collapsars
+merger_mask=H_2a_Data_copy$Name %in% Mergers
+H_2a_Data_collapsars=H_2a_Data_copy[collapsar_mask, ]
+H_2a_Data_mergers=H_2a_Data_copy[merger_mask, ]
+H_2a_Data_unknown=H_2a_Data_copy[!c(collapsar_mask+merger_mask), ]
+plot(H_2a_Data_unknown$Plateau.E_iso~H_2a_Data_unknown$Prompt.E_iso, pch=20, main=paste(strwrap('Uncolluminated Energy Relationship for GRBs', width = 50), collapse = "\n"), xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"), log="xy")
+# points(H_2a_Data_mergers$Plateau.E_iso~H_2a_Data_mergers$Prompt.E_iso, pch=11, col='red', log="xy")
+points(H_2a_Data_collapsars$Plateau.E_iso~H_2a_Data_collapsars$Prompt.E_iso, pch=8, col='blue')
 abline(mod2a)
 #add dashed lines for confidence bands
-lines(newx, preds[ ,3], lty = 'dashed', col = 'blue')
-lines(newx, preds[ ,2], lty = 'dashed', col = 'blue')
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
+legend("topleft",
+       legend = c('Unknown', 'Collapsars'),
+       col = c('black', 'blue'),
+       pch = c(20, 8))
+
+print("What follows is a version of the model where the lowest-energy prompt emission is removed, to eliminate some of the quartile error. This isn't necessary to bring the model to our predetermined significance level of 1%, nor does it have any physical meaning. Therefore, it is not discussed in the results of the paper.")
 
 new_df <- subset(df, x > 51.5) 
 m=new_df$y
@@ -90,14 +131,26 @@ newx <- seq(min(n), max(n), length.out=100)
 preds <- predict(mod2a1, newdata=data.frame(n=newx), interval='confidence')
 par(mar=c(5,5,5,5))
 par(mfrow=c(1,1))
-plot(new_df$y~new_df$x, main=paste(strwrap('Uncolluminated Isotropic Energy Relationship for GRBs', width = 50), collapse = "\n"), xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"))
+H_2a_Data_collapsars_2=subset(H_2a_Data_collapsars, log10(H_2a_Data_collapsars$Prompt.E_iso) > 51.5)
+H_2a_Data_unknown_2=subset(H_2a_Data_unknown, log10(H_2a_Data_unknown$Prompt.E_iso) > 51.5)
+plot(H_2a_Data_unknown_2$Plateau.E_iso~H_2a_Data_unknown_2$Prompt.E_iso, pch=20, main=paste(strwrap('Uncolluminated Energy Relationship for GRBs', width = 50), collapse = "\n"), xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"), log="xy")
+# points(H_2a_Data_mergers$Plateau.E_iso~H_2a_Data_mergers$Prompt.E_iso, pch=11, col='red', log="xy")
+points(H_2a_Data_collapsars_2$Plateau.E_iso~H_2a_Data_collapsars_2$Prompt.E_iso, pch=8, col='blue')
 abline(mod2a1)
 #add dashed lines for confidence bands
-lines(newx, preds[ ,3], lty = 'dashed', col = 'blue')
-lines(newx, preds[ ,2], lty = 'dashed', col = 'blue')
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
+legend("topleft",
+       legend = c('Unknown', 'Collapsars'),
+       col = c('black', 'blue'),
+       pch = c(20, 8))
+
+s3d <-scatterplot3d(x=log10(H_2a_Data_unknown$Prompt.E_iso), y=log10(H_2a_Data_unknown$Plateau.E_iso), z=log10(H_2a_Data_unknown$t90), pch=20, color ='black', xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 25), collapse = "\n"), zlab="t90 (s, GBM)") 
+s3d$points3d(x=log10(H_2a_Data_collapsars$Prompt.E_iso), y=log10(H_2a_Data_collapsars$Plateau.E_iso), z=log10(H_2a_Data_collapsars$t90), pch=8, col ='blue')
+# plot_ly(x=H_2a_Data_copy$Prompt.E_iso, y=H_2a_Data_copy$Plateau.E_iso, z=log10(H_2a_Data_copy$t90), color=log10(H_2a_Data_copy$t90), colors = c('green', 'blue'))
 ```
 
-```{r Hypothesis 2b, echo=FALSE}
+```{r Hypothesis 2b, echo=FALSE, warning=FALSE}
 H_2b_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_2b_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
 H_2b_Data_copy<-data.frame(H_2b_Data)
 #names(H_2b_Data_copy) <- NULL             # Delete column names
@@ -105,24 +158,47 @@ long_list<-which(H_2b_Data_copy[[4]]>4.2)
 short_list<-which(H_2b_Data_copy[[4]]<=4.2)
 long_H_2b<-H_2b_Data_copy[long_list,]
 short_H_2b<-H_2b_Data_copy[short_list,]
-long_x<-log10(long_H_2b[[2]])
-long_y<-log10(long_H_2b[[3]])
-short_x<-log10(short_H_2b[[2]])
-short_y<-log10(short_H_2b[[3]])
-plot(long_x, long_y, col='blue', xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)")
-points(short_x, short_y, col='red')
-H_2b_Data_copy_1 <- drop_na(H_2b_Data_copy)
-x<-H_2b_Data_copy_1$Prompt.Fluence
-y<-H_2b_Data_copy_1$End.Plateau.Flux
-z<-H_2b_Data_copy_1$t90
-# z<-array(0, c(length(x),length(y)))
-# for (i in 1:length(x)){
-#   for (j in 1:length(y)){
-#     if (i==j){
-#       z[i,j]<-H_2b_Data_copy_1[i,"t90"]
-#     } 
-#   }
-# }
-plot_ly(x=x, y=y, z=z, type="scatter3d", mode="markers", color=z)
-# image(xtabs(z~x+y), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 50), collapse = "\n"))
+collapsar_mask<-long_H_2b$Name %in% Collapsars
+merger_mask<-long_H_2b$Name %in% Mergers
+H_2b_Data_long_collapsars<-long_H_2b[collapsar_mask, ]
+H_2b_Data_long_mergers<-long_H_2b[merger_mask, ]
+H_2b_Data_long_unknown<-long_H_2b[!c(collapsar_mask+merger_mask), ]
+collapsar_mask<-short_H_2b$Name %in% Collapsars
+merger_mask<-short_H_2b$Name %in% Mergers
+H_2b_Data_short_collapsars<-short_H_2b[collapsar_mask, ]
+H_2b_Data_short_mergers<-short_H_2b[merger_mask, ]
+H_2b_Data_short_unknown<-short_H_2b[!c(collapsar_mask+merger_mask), ]
+# long_x<-log10(long_H_2b[[2]])
+# long_y<-log10(long_H_2b[[3]])
+# short_x<-log10(short_H_2b[[2]])
+# short_y<-log10(short_H_2b[[3]])
+plot(H_2b_Data_long_unknown$End.Plateau.Flux~H_2b_Data_long_unknown$Prompt.Fluence, col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="The Long Burst Prompt Fluence versus End-Plateau Flux", xlim=c(5e-8, 5e-3))
+points(H_2b_Data_long_mergers$End.Plateau.Flux~H_2b_Data_long_mergers$Prompt.Fluence, col='red', pch=11)
+points(H_2b_Data_long_collapsars$End.Plateau.Flux~H_2b_Data_long_collapsars$Prompt.Fluence, col='blue', pch=8)
+legend("topleft",
+       legend = c('Unknown', 'Mergers', 'Collapsars'),
+       col = c('black','red', 'blue'),
+       pch = c(20, 11, 8))
+plot(H_2b_Data_short_unknown$End.Plateau.Flux~H_2b_Data_short_unknown$Prompt.Fluence, col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="The Short Burst Prompt Fluence versus End-Plateau Flux")
+points(H_2b_Data_short_mergers$End.Plateau.Flux~H_2b_Data_short_mergers$Prompt.Fluence, col='red', pch=11)
+points(H_2b_Data_short_collapsars$End.Plateau.Flux~H_2b_Data_short_collapsars$Prompt.Fluence, col='blue', pch=8)
+legend("topleft",
+       legend = c('Unknown'),
+       col = c('black'),
+       pch = c(20, 11, 8))
+plot(c(H_2b_Data_long_unknown$End.Plateau.Flux,H_2b_Data_short_unknown$End.Plateau.Flux)~c(H_2b_Data_long_unknown$Prompt.Fluence,H_2b_Data_short_unknown$Prompt.Fluence), col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="All Burst Prompt Fluences versus End-Plateau Fluxes", xlim=c(5e-8, 5e-3))
+points(c(H_2b_Data_long_mergers$End.Plateau.Flux,H_2b_Data_short_mergers$End.Plateau.Flux)~c(H_2b_Data_long_mergers$Prompt.Fluence,H_2b_Data_short_mergers$Prompt.Fluence), col='red', pch=11)
+points(c(H_2b_Data_long_collapsars$End.Plateau.Flux,H_2b_Data_short_collapsars$End.Plateau.Flux)~c(H_2b_Data_long_collapsars$Prompt.Fluence,H_2b_Data_short_collapsars$Prompt.Fluence), col='blue', pch=8)
+legend("topleft",
+       legend = c('Unknown', 'Mergers', 'Collapsars'),
+       col = c('black','red', 'blue'),
+       pch = c(20, 11, 8))
+s3d <-scatterplot3d(x=log10(H_2b_Data_long_unknown$End.Plateau.Flux), y=log10(H_2b_Data_long_unknown$End.Plateau.Flux), z=log10(H_2b_Data_long_unknown$t90), color="purple", pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"), zlab="t90 (s, GBM)", main = paste(strwrap("Three-Dimensional Plot of all Data points Motivating Machine Learning by Separation of Long and Short Bursts, Though Not Progenitors", width = 50), collapse = "\n"), xlim = c(-14, -3), zlim = c(-1, 3))
+s3d$points3d(x=log10(H_2b_Data_short_unknown$Prompt.Fluence), y=log10(H_2b_Data_short_unknown$End.Plateau.Flux), z=log10(H_2b_Data_short_unknown$t90), col="orange", pch=20)
+s3d$points3d(x=c(log10(H_2b_Data_long_mergers$Prompt.Fluence),log10(H_2b_Data_short_mergers$Prompt.Fluence)), y=c(log10(H_2b_Data_long_mergers$End.Plateau.Flux),log10(H_2b_Data_short_mergers$End.Plateau.Flux)), z=c(log10(H_2b_Data_long_mergers$t90),log10(H_2b_Data_short_mergers$t90)), col="red", pch=11)
+s3d$points3d(x=c(log10(H_2b_Data_long_collapsars$Prompt.Fluence),log10(H_2b_Data_short_collapsars$Prompt.Fluence)), y=c(log10(H_2b_Data_long_collapsars$End.Plateau.Flux),log10(H_2b_Data_short_collapsars$End.Plateau.Flux)), z=c(log10(H_2b_Data_long_collapsars$t90),log10(H_2b_Data_short_collapsars$t90)), col="blue", pch=8)
+legend("topleft",
+       legend = c('Unknown (Long)', 'Unknown (Short)', 'Mergers', 'Collapsars'),
+       col = c('purple','orange','red', 'blue'),
+       pch = c(20,20, 11, 8))
 ```
