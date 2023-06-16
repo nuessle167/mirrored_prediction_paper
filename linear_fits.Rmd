@@ -12,7 +12,13 @@ library(readxl)
 library(plotly)
 library(tidyr)
 library("scatterplot3d")
+# library(randomForest)
+library(e1071)
+library(misc3d)
 library(plot3D)
+library(scatterplot3d)
+library(rgl)
+set.seed(1729)
 ```
 
 ```{r defining the special bursts, echo=FALSE}
@@ -201,4 +207,47 @@ legend("topleft",
        legend = c('Unknown (Long)', 'Unknown (Short)', 'Mergers', 'Collapsars'),
        col = c('purple','orange','red', 'blue'),
        pch = c(20,20, 11, 8))
+missing<-which(!complete.cases(H_2b_Data_copy))
+no_NA_H_2b_Data<- H_2b_Data_copy[-missing, ]
+collapsar_mask<-no_NA_H_2b_Data$Name %in% Collapsars
+merger_mask<-no_NA_H_2b_Data$Name %in% Mergers
+short_list<-which(no_NA_H_2b_Data$t90<4.2)
+long_list<-which(no_NA_H_2b_Data$t90>4.2)
+Classification<-rep("Unknown", nrow(no_NA_H_2b_Data))
+Classification[short_list]<-"merger"
+Classification[long_list]<-"collapsar" 
+Classification[collapsar_mask]<-"collapsar" #It kinda looks like an explosion I guess IDK
+Classification[merger_mask]<-"merger" #and this can be the jet of the merger
+new_H_2b_Data<-data.frame(cbind(log10(no_NA_H_2b_Data$Prompt.Fluence), log10(no_NA_H_2b_Data$End.Plateau.Flux), log10(no_NA_H_2b_Data$t90), as.factor(Classification)))
+colnames(new_H_2b_Data)<-c("Prompt.Fluence", "End.Plateau.Flux", "t90", "as.factor.Classification.")
+# model <- randomForest(formula = no_NA_H_2b_Data$Classification ~ ., data = no_NA_H_2b_Data)
+svmfit<-svm(new_H_2b_Data$as.factor.Classification. ~ ., data = new_H_2b_Data, type = "C-classification", cost = 1.0, kernel = "linear")
+print(svmfit)
+plot(svmfit, new_H_2b_Data, End.Plateau.Flux~Prompt.Fluence, slice = list(t90 = 0.5, t90 = 1), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"))
+plot(svmfit, new_H_2b_Data, End.Plateau.Flux~t90, slice = list(Prompt.Fluence = -5.5, Prompt.Fluence = -4.5), xlab="t90 (s, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"))
+plot(svmfit, new_H_2b_Data, Prompt.Fluence~t90, slice = list(End.Plateau.Flux = -10, End.Plateau.Flux  = -9), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)",  ylab="t90 (s, GBM)",)
+# Simulate some data
+n    = 100
+nnew = 50
+set.seed(12345)
+group = sample(2, n, replace=T)
+dat   = data.frame(group=factor(group), matrix(rnorm(n*3, rep(group, each=3)), ncol=3, byrow=T))
+
+# # Fit SVM
+# fit = svm(group ~ ., data=dat)
+# 
+# # Plot original data
+# plot3d(dat[,-1], col=dat$group)
+
+# Get decision values for a new data grid
+newdat.list = lapply(new_H_2b_Data, function(x) seq(min(x), max(x), len=nnew))
+newdat      = expand.grid(newdat.list)
+names(newdat) <- c("Prompt.Fluence", "End.Plateau.Flux", "t90")
+newdat.pred = predict(svmfit, newdata=newdat, decision.values=T)
+newdat.dv   = attr(newdat.pred, 'decision.values')
+newdat.dv   = array(newdat.dv, dim=rep(nnew, 3))
+
+# Fit/plot an isosurface to the decision boundary
+plot3d(x=new_H_2b_Data$Prompt.Fluence, y=new_H_2b_Data$End.Plateau.Flux, z=new_H_2b_Data$t90, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"), zlab="t90 (s, GBM)")
+contour3d(newdat.dv, level=0, x=newdat.list$Prompt.Fluence, y=newdat.list$End.Plateau.Flux, z=newdat.list$t90, add=T)
 ```
