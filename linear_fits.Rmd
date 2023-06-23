@@ -305,8 +305,12 @@ plot(svmfit, training_set, Peak_E_over_Flu~t90, ylab=expression('E_peak/Fluence 
 # points(log10(Goldstein_S2_unknown$t90), log10(Goldstein_S2_unknown$`Peak E. over Flue.`))
 predicted_svm<-predict(svmfit, new_Goldstein_S2_Data[unknown_remover, ])
 plot(new_Goldstein_S2_Data[unknown_remover, ]$Peak_E_over_Flu~new_Goldstein_S2_Data[unknown_remover, ]$t90, ylab=expression('E_peak/Fluence 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=predicted_svm, pch=20)
-points(Goldstein_S2_mergers$t90, Goldstein_S2_mergers$`Peak E. over Flue.`, pch=4, col='red')
-points(Goldstein_S2_collapsars$t90, Goldstein_S2_collapsars$`Peak E. over Flue.`, pch=8, col='blue')
+points(log10(Goldstein_S2_mergers$t90), log10(Goldstein_S2_mergers$`Peak E. over Flue.`), pch=4, col='#09622A')
+points(log10(Goldstein_S2_collapsars$t90), log10(Goldstein_S2_collapsars$`Peak E. over Flue.`), pch=8, col='blue')
+legend("topleft",
+       legend = c('Sorted Collapsars', 'Sorted Mergers', "Detected Mergers", 'Detected Collapsars'),
+       col = c('black', 'red', '#09622A', 'blue'),
+       pch = c(20, 20, 4, 8))
 ###
 #now let's try it on the overlapping sample with redshifts
 Goldstein_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
@@ -329,97 +333,140 @@ confusionMatrix(svm_check, factor(new_Goldstein_S6_Data[-unknown_remover, ]$as.f
 ```{r Gehrels Hypothesis, echo=FALSE}
 Gehrels_S3_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_3_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
 Gehrels_S3_Data<-Gehrels_S3_Data[-c(146), ] #removed an outlier from the linear model
-##
 collapsar_mask=Gehrels_S3_Data$Name %in% Collapsars
 merger_mask=Gehrels_S3_Data$Name %in% Mergers
 Gehrels_S3_collapsars=Gehrels_S3_Data[collapsar_mask, ]
 Gehrels_S3_mergers=Gehrels_S3_Data[merger_mask, ]
 Gehrels_S3_unknown=Gehrels_S3_Data[!c(collapsar_mask+merger_mask), ]
-plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow Flux at 11 Hrs. 10kev-10MeV 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
+long_mask=which(Gehrels_S3_unknown$t90>4.5)
+short_mask=which(Gehrels_S3_unknown$t90<=4.5)
+Gehrels_S3_Long=Gehrels_S3_unknown[long_mask, ]
+Gehrels_S3_Short=Gehrels_S3_unknown[short_mask, ]
+x<-log10(Gehrels_S3_Data$Prompt_Flu)
+y<-log10(Gehrels_S3_Data$`X-ray_F11`)
+z<-log10(Gehrels_S3_Data$t90)
+x2<-log10(Gehrels_S3_Long$Prompt_Flu)
+y2<-log10(Gehrels_S3_Long$`X-ray_F11`)
+z2<-log10(Gehrels_S3_Long$t90)
+##
+modGehrels<-lm(y~x)
+plot(modGehrels)
+print(anova(modGehrels))
+print(summary(modGehrels))
+#
+modGehrels2<-lm(y~x+z)
+par(mfrow=c(2,2))
+plot(modGehrels2)
+print(anova(modGehrels2))
+print(summary(modGehrels2))
+#
+modGehrels3<-lm(y2~x2)
+par(mfrow=c(2,2))
+plot(modGehrels3)
+print(anova(modGehrels3))
+print(summary(modGehrels3))
+##
+newx <- seq(min(x), max(x), length.out=100)
+preds <- predict(modGehrels, newdata=data.frame(x=newx), interval='prediction')
+##
+par(mfrow=c(1,1))
+par(mar=c(5,5,5,5))
+plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
 points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
+abline(modGehrels)
+#add dashed lines for confidence bands
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
 legend("bottomleft",
        legend = c('Unknown', 'Mergers', 'Collapsars'),
        col = c('black', 'red', 'blue'),
        pch = c(20, 4, 8))
 ##
-long_mask=which(Gehrels_S3_unknown$t90>4.5)
-short_mask=which(Gehrels_S3_unknown$t90<=4.5)
-Gehrels_S3_Long=Gehrels_S3_unknown[long_mask, ]
-Gehrels_S3_Short=Gehrels_S3_unknown[short_mask, ]
-plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow Flux at 11 Hrs. 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
+# newx <- seq(min(x2), max(x2), length.out=100)
+# preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
+##
+par(mar=c(5,5,5,5))
+plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
 points(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`, pch=20, col='grey')
 points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
+abline(modGehrels)
+#add dashed lines for confidence bands
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
 legend("bottomleft",
        legend = c('Unknown Long', "Unknown Short", 'Mergers', 'Collapsars'),
        col = c('black', 'grey', 'red', 'blue'),
        pch = c(20, 20, 4, 8))
-##
-modGehrels<-lm(log10(Gehrels_S3_Data$`X-ray_F11`)~log10(Gehrels_S3_Data$Prompt_Flu))
-par(mfrow=c(2,2))
-plot(modGehrels)
-print(anova(modGehrels))
-print(summary(modGehrels))
-#
-modGehrels2<-lm(log10(Gehrels_S3_Data$`X-ray_F11`)~log10(Gehrels_S3_Data$Prompt_Flu)+log10(Gehrels_S3_Data$t90))
-par(mfrow=c(2,2))
-plot(modGehrels2)
-print(anova(modGehrels2))
-print(summary(modGehrels2))
-#
-modGehrels3<-lm(log10(Gehrels_S3_Long$`X-ray_F11`)~log10(Gehrels_S3_Long$Prompt_Flu))
-par(mfrow=c(2,2))
-plot(modGehrels3)
-print(anova(modGehrels3))
-print(summary(modGehrels3))
 ####
-par(mfrow=c(1,1))
 Gehrels_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
 Gehrels_S6_Data<-Gehrels_S6_Data[-c(40), ] #removed an outlier from the linear model
-##
 collapsar_mask=Gehrels_S6_Data$Name %in% Collapsars
 merger_mask=Gehrels_S6_Data$Name %in% Mergers
 Gehrels_S6_collapsars=Gehrels_S6_Data[collapsar_mask, ]
 Gehrels_S6_mergers=Gehrels_S6_Data[merger_mask, ]
 Gehrels_S6_unknown=Gehrels_S6_Data[!c(collapsar_mask+merger_mask), ]
-plot(Gehrels_S6_unknown$Prompt_E_iso, Gehrels_S6_unknown$`X-ray_F11`, pch=20,  xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow Flux at 11 Hrs. 10kev-10MeV 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
-# points(Gehrels_S6_mergers$Prompt_E_iso, Gehrels_S6_mergers$`X-ray_F11`, pch=4, col='red')
-points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
-legend("bottomleft",
-       legend = c('Unknown', 'Collapsars'),
-       col = c('black', 'blue'),
-       pch = c(20, 8))
-##
 long_mask=which(Gehrels_S6_unknown$t90>4.5)
 short_mask=which(Gehrels_S6_unknown$t90<=4.5)
 Gehrels_S6_Long=Gehrels_S6_unknown[long_mask, ]
 Gehrels_S6_Short=Gehrels_S6_unknown[short_mask, ]
-plot(Gehrels_S6_Long$Prompt_E_iso, Gehrels_S6_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow Flux at 11 Hrs. 10kev-10MeV 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
-points(Gehrels_S6_Short$Prompt_E_iso, Gehrels_S6_Short$`X-ray_F11`, pch=20, col='grey')
-# points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
-points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
-legend("bottomleft",
-       legend = c('Unknown Long', "Unknown Short", 'Collapsars'),
-       col = c('black', 'grey', 'blue'),
-       pch = c(20, 20, 8))
+x<-log10(Gehrels_S6_Data$Prompt_E_iso)
+y<-log10(Gehrels_S6_Data$`X-ray_F11`)
+z<-log10(Gehrels_S6_Data$t90)
+x2<-log10(Gehrels_S6_Long$Prompt_E_iso)
+y2<-log10(Gehrels_S6_Long$`X-ray_F11`)
+z2<-log10(Gehrels_S6_Long$t90)
 ##
-modGehrels<-lm(log10(Gehrels_S6_Data$`X-ray_F11`)~log10(Gehrels_S6_Data$Prompt_E_iso))
+modGehrels<-lm(y~x)
 par(mfrow=c(2,2))
 plot(modGehrels)
 print(anova(modGehrels))
 print(summary(modGehrels))
 #
-modGehrels2<-lm(log10(Gehrels_S6_Data$`X-ray_F11`)~log10(Gehrels_S6_Data$Prompt_E_iso)+log10(Gehrels_S6_Data$t90))
-par(mfrow=c(2,2))
+modGehrels2<-lm(y~x+z)
 plot(modGehrels2)
 print(anova(modGehrels2))
 print(summary(modGehrels2))
 #
-modGehrels3<-lm(log10(Gehrels_S6_Long$`X-ray_F11`)~log10(Gehrels_S6_Long$Prompt_E_iso))
+modGehrels3<-lm(y2~x2)
 par(mfrow=c(2,2))
 plot(modGehrels3)
 print(anova(modGehrels3))
 print(summary(modGehrels3))
+##
+newx <- seq(min(x), max(x), length.out=100)
+preds <- predict(modGehrels, newdata=data.frame(x=newx), interval='prediction')
+##
+par(mfrow=c(1,1))
+par(mar=c(5,5,5,5))
+plot(Gehrels_S6_unknown$Prompt_E_iso, Gehrels_S6_unknown$`X-ray_F11`, pch=20,  xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
+# points(Gehrels_S6_mergers$Prompt_E_iso, Gehrels_S6_mergers$`X-ray_F11`, pch=4, col='red')
+points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
+abline(modGehrels)
+#add dashed lines for confidence bands
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
+legend("bottomleft",
+       legend = c('Unknown', 'Collapsars'),
+       col = c('black', 'blue'),
+       pch = c(20, 8))
+##
+# newx <- seq(min(x2), max(x2), length.out=100)
+# preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
+##
+par(mar=c(5,5,5,5))
+plot(Gehrels_S6_Long$Prompt_E_iso, Gehrels_S6_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
+points(Gehrels_S6_Short$Prompt_E_iso, Gehrels_S6_Short$`X-ray_F11`, pch=20, col='grey')
+# points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
+points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
+abline(modGehrels)
+#add dashed lines for confidence bands
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
+legend("bottomleft",
+       legend = c('Unknown Long', "Unknown Short", 'Collapsars'),
+       col = c('black', 'grey', 'blue'),
+       pch = c(20, 20, 8))
 ```
 
