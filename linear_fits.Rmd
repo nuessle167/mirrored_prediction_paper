@@ -272,7 +272,7 @@ long_mask=which(Goldstein_S2_unknown$t90>4.5)
 short_mask=which(Goldstein_S2_unknown$t90<=4.5)
 Goldstein_S2_Long=Goldstein_S2_unknown[long_mask, ]
 Goldstein_S2_Short=Goldstein_S2_unknown[short_mask, ]
-plot(Goldstein_S2_Long$t90, Goldstein_S2_Long$`Peak E. over Flue.`, pch=20, ylab=expression('E_peak/Fluence 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy", xlim=c(1e-2, 1e3))
+plot(Goldstein_S2_Long$t90, Goldstein_S2_Long$`Peak E. over Flue.`, pch=20, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy", xlim=c(1e-2, 1e3))
 points(Goldstein_S2_Short$t90, Goldstein_S2_Short$`Peak E. over Flue.`, pch=20, col='grey')
 points(Goldstein_S2_mergers$t90, Goldstein_S2_mergers$`Peak E. over Flue.`, pch=4, col='red')
 points(Goldstein_S2_collapsars$t90, Goldstein_S2_collapsars$`Peak E. over Flue.`, pch=8, col='blue')
@@ -301,10 +301,10 @@ collapsar_mask<-which(new_Goldstein_S2_Data$as.factor.Classification.==1)
 training_set=new_Goldstein_S2_Data[-unknown_remover, ]
 svmfit<-svm(training_set$as.factor.Classification. ~ ., data = training_set, type = "C-classification", cost = 1.0, kernel = "sigmoid")
 print(svmfit)
-plot(svmfit, training_set, Peak_E_over_Flu~t90, ylab=expression('E_peak/Fluence 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy")
+plot(svmfit, training_set, Peak_E_over_Flu~t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy")
 # points(log10(Goldstein_S2_unknown$t90), log10(Goldstein_S2_unknown$`Peak E. over Flue.`))
 predicted_svm<-predict(svmfit, new_Goldstein_S2_Data[unknown_remover, ])
-plot(new_Goldstein_S2_Data[unknown_remover, ]$Peak_E_over_Flu~new_Goldstein_S2_Data[unknown_remover, ]$t90, ylab=expression('E_peak/Fluence 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=predicted_svm, pch=20)
+plot(new_Goldstein_S2_Data[unknown_remover, ]$Peak_E_over_Flu~new_Goldstein_S2_Data[unknown_remover, ]$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=predicted_svm, pch=20)
 points(log10(Goldstein_S2_mergers$t90), log10(Goldstein_S2_mergers$`Peak E. over Flue.`), pch=4, col='#09622A')
 points(log10(Goldstein_S2_collapsars$t90), log10(Goldstein_S2_collapsars$`Peak E. over Flue.`), pch=8, col='blue')
 legend("topleft",
@@ -325,7 +325,7 @@ new_Goldstein_S6_Data<-data.frame(cbind(log10(no_NA_Goldstein_S6_Data$`Peak E. o
 colnames(new_Goldstein_S6_Data)<-c("Peak_E_over_Flu", "t90", "as.factor.Classification.")
 unknown_remover<-which(new_Goldstein_S6_Data$as.factor.Classification.==3)
 Second_predicted_svm<-predict(svmfit, new_Goldstein_S6_Data)
-plot(new_Goldstein_S6_Data$Peak_E_over_Flu~new_Goldstein_S6_Data$t90, ylab=expression('E_peak/Fluence 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=Second_predicted_svm, pch=20)
+plot(new_Goldstein_S6_Data$Peak_E_over_Flu~new_Goldstein_S6_Data$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=Second_predicted_svm, pch=20)
 svm_check=predict(svmfit, new_Goldstein_S6_Data[-unknown_remover, ])
 confusionMatrix(svm_check, factor(new_Goldstein_S6_Data[-unknown_remover, ]$as.factor.Classification.), dnn = c("Prediction", "Reference"))
 ```
