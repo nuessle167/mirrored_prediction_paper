@@ -12,7 +12,7 @@ library(readxl)
 library(plotly)
 library(tidyr)
 library("scatterplot3d")
-# library(randomForest)
+library(randomForest)
 library(e1071)
 library(misc3d)
 library(plot3D)
@@ -20,6 +20,8 @@ library(scatterplot3d)
 library(rgl)
 library(data.table)
 library(caret)
+library(rfUtilities)
+library(readr)
 # library(tidyverse)
 set.seed(1729)
 ```
@@ -89,7 +91,7 @@ cat(", meaning that the null hypothesis cannot be rejected, and it is possible t
 What follows is the plots for the efficiency hypothesis, linking the prompt and afterglow isotropic energies as derived in the python code. As one can see, this relationship does have good significance in addition to its clear physical relevance to both the burst mechanism and the circumburst environment.
 
 ```{r Hypothesis 2a, echo=FALSE}
-H_2a_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_2a_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+H_2a_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Hypothesis_2a_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric", "numeric"))
 H_2a_Data_copy<-data.frame(H_2a_Data)
 # names(H_2a_Data_copy) <- NULL             # Delete column names
 # H_2a_Data_copy<-H_2a_Data_copy[-c(15), ] # Print updated data
@@ -162,6 +164,8 @@ legend("topleft",
 s3d <-scatterplot3d(x=log10(H_2a_Data_unknown$Prompt.E_iso), y=log10(H_2a_Data_unknown$Plateau.E_iso), z=log10(H_2a_Data_unknown$t90), pch=20, color ='black', xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 25), collapse = "\n"), zlab="t90 (s, GBM)") 
 s3d$points3d(x=log10(H_2a_Data_collapsars$Prompt.E_iso), y=log10(H_2a_Data_collapsars$Plateau.E_iso), z=log10(H_2a_Data_collapsars$t90), pch=8, col ='blue')
 # plot_ly(x=H_2a_Data_copy$Prompt.E_iso, y=H_2a_Data_copy$Plateau.E_iso, z=log10(H_2a_Data_copy$t90), color=log10(H_2a_Data_copy$t90), colors = c('green', 'blue'))
+10^confint(mod2a, 'x', level=0.99)
+predict(mod2a, data.frame(x=mean(x)) , interval="predict") 
 ```
 
 ```{r Hypothesis 2b, echo=FALSE, warning=FALSE, eval=FALSE}
@@ -299,11 +303,27 @@ unknown_remover<-which(new_Goldstein_S2_Data$as.factor.Classification.==3)
 merger_mask<-which(new_Goldstein_S2_Data$as.factor.Classification.==2)
 collapsar_mask<-which(new_Goldstein_S2_Data$as.factor.Classification.==1)
 training_set=new_Goldstein_S2_Data[-unknown_remover, ]
-svmfit<-svm(training_set$as.factor.Classification. ~ ., data = training_set, type = "C-classification", cost = 1.0, kernel = "sigmoid")
+svmfit<-svm(training_set$as.factor.Classification. ~ ., data = training_set, type = "C-classification", cost = 1.0, kernel = "sigmoid", probability=TRUE)
 print(svmfit)
 plot(svmfit, training_set, Peak_E_over_Flu~t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy")
 # points(log10(Goldstein_S2_unknown$t90), log10(Goldstein_S2_unknown$`Peak E. over Flue.`))
-predicted_svm<-predict(svmfit, new_Goldstein_S2_Data[unknown_remover, ])
+predicted_svm<-predict(svmfit, new_Goldstein_S2_Data, probability=TRUE)
+new_table<-attr(predicted_svm, "probabilities")
+new_table<-cbind(no_NA_Goldstein_S2_Data$Name, new_table)
+colnames(new_table)<-c("Name", "P_collapsar", "P_merger")
+new_table<-data.frame(new_table)
+write.csv(new_table, "/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Classification.csv")
+# y2<-as.numeric(predicted_svm)
+# training_mask<-which(y2==2)
+# y2[training_mask]<-0
+# calibrated.predicted_svm <- probability.calibration(y2, predicted_svm, regularization = TRUE)
+# y = training_set[,"as.factor.Classification."]
+# training_mask<-which(y==2)
+# y[training_mask]<-0
+#  x = training_set[,1:2]
+# ( rf.mdl <- randomForest(x=x, y=factor(y)) )
+#  y.hat <- predict(rf.mdl, training_set[,1:2], type="prob")[,2]
+#  calibrated.y.hat <- probability.calibration(y, y.hat, regularization = TRUE) 
 plot(new_Goldstein_S2_Data[unknown_remover, ]$Peak_E_over_Flu~new_Goldstein_S2_Data[unknown_remover, ]$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=predicted_svm, pch=20)
 points(log10(Goldstein_S2_mergers$t90), log10(Goldstein_S2_mergers$`Peak E. over Flue.`), pch=4, col='#09622A')
 points(log10(Goldstein_S2_collapsars$t90), log10(Goldstein_S2_collapsars$`Peak E. over Flue.`), pch=8, col='blue')
@@ -311,28 +331,32 @@ legend("topleft",
        legend = c('Sorted Collapsars', 'Sorted Mergers', "Detected Mergers", 'Detected Collapsars'),
        col = c('black', 'red', '#09622A', 'blue'),
        pch = c(20, 20, 4, 8))
+# svm_check=predict(svmfit, new_Goldstein_S6_Data[-unknown_remover, ])
+# confusionMatrix(svm_check, factor(new_Goldstein_S6_Data[-unknown_remover, ]$as.factor.Classification.), dnn = c("Prediction", "Reference"))
 ###
 #now let's try it on the overlapping sample with redshifts
-Goldstein_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
-missing<-which(!complete.cases(Goldstein_S6_Data))
-no_NA_Goldstein_S6_Data<- Goldstein_S6_Data[-missing, ]
-collapsar_mask<-no_NA_Goldstein_S6_Data$Name %in% Collapsars
-merger_mask<-no_NA_Goldstein_S6_Data$Name %in% Mergers
-Classification<-rep("Unknown", nrow(no_NA_Goldstein_S6_Data))
-Classification[collapsar_mask]<-"collapsar"
-Classification[merger_mask]<-"merger"
-new_Goldstein_S6_Data<-data.frame(cbind(log10(no_NA_Goldstein_S6_Data$`Peak E. over Flue.`), log10(no_NA_Goldstein_S6_Data$t90), as.factor(Classification)))
-colnames(new_Goldstein_S6_Data)<-c("Peak_E_over_Flu", "t90", "as.factor.Classification.")
-unknown_remover<-which(new_Goldstein_S6_Data$as.factor.Classification.==3)
-Second_predicted_svm<-predict(svmfit, new_Goldstein_S6_Data)
-plot(new_Goldstein_S6_Data$Peak_E_over_Flu~new_Goldstein_S6_Data$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=Second_predicted_svm, pch=20)
-svm_check=predict(svmfit, new_Goldstein_S6_Data[-unknown_remover, ])
-confusionMatrix(svm_check, factor(new_Goldstein_S6_Data[-unknown_remover, ]$as.factor.Classification.), dnn = c("Prediction", "Reference"))
+# Goldstein_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+# missing<-which(!complete.cases(Goldstein_S6_Data))
+# no_NA_Goldstein_S6_Data<- Goldstein_S6_Data[-missing, ]
+# collapsar_mask<-no_NA_Goldstein_S6_Data$Name %in% Collapsars
+# merger_mask<-no_NA_Goldstein_S6_Data$Name %in% Mergers
+# Classification<-rep("Unknown", nrow(no_NA_Goldstein_S6_Data))
+# Classification[collapsar_mask]<-"collapsar"
+# Classification[merger_mask]<-"merger"
+# new_Goldstein_S6_Data<-data.frame(cbind(log10(no_NA_Goldstein_S6_Data$`Peak E. over Flue.`), log10(no_NA_Goldstein_S6_Data$t90), as.factor(Classification)))
+# colnames(new_Goldstein_S6_Data)<-c("Peak_E_over_Flu", "t90", "as.factor.Classification.")
+# unknown_remover<-which(new_Goldstein_S6_Data$as.factor.Classification.==3)
+# Second_predicted_svm<-predict(svmfit, new_Goldstein_S6_Data)
+# plot(new_Goldstein_S6_Data$Peak_E_over_Flu~new_Goldstein_S6_Data$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=Second_predicted_svm, pch=20)
+# svm_check=predict(svmfit, new_Goldstein_S6_Data[-unknown_remover, ])
+# confusionMatrix(svm_check, factor(new_Goldstein_S6_Data[-unknown_remover, ]$as.factor.Classification.), dnn = c("Prediction", "Reference"))
+##
+Fermi_overlap_mask<-Goldstein_S2_Data$Name %in% Gehrels_S3_Data$Name #these are the ones BAT and XRT also saw
 ```
 
 ```{r Gehrels Hypothesis, echo=FALSE}
 Gehrels_S3_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_3_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
-Gehrels_S3_Data<-Gehrels_S3_Data[-c(146), ] #removed an outlier from the linear model
+# Gehrels_S3_Data<-Gehrels_S3_Data[-c(146), ] #removed an outlier from the linear model
 collapsar_mask=Gehrels_S3_Data$Name %in% Collapsars
 merger_mask=Gehrels_S3_Data$Name %in% Mergers
 Gehrels_S3_collapsars=Gehrels_S3_Data[collapsar_mask, ]
@@ -345,11 +369,16 @@ Gehrels_S3_Short=Gehrels_S3_unknown[short_mask, ]
 x<-log10(Gehrels_S3_Data$Prompt_Flu)
 y<-log10(Gehrels_S3_Data$`X-ray_F11`)
 z<-log10(Gehrels_S3_Data$t90)
+Gehrels_S3_Long<-Gehrels_S3_Long[-c(17, 96, 171), ]
 x2<-log10(Gehrels_S3_Long$Prompt_Flu)
 y2<-log10(Gehrels_S3_Long$`X-ray_F11`)
 z2<-log10(Gehrels_S3_Long$t90)
+x3<-log10(Gehrels_S3_Short$Prompt_Flu)
+y3<-log10(Gehrels_S3_Short$`X-ray_F11`)
+z3<-log10(Gehrels_S3_Short$t90)
 ##
 modGehrels<-lm(y~x)
+par(mfrow=c(2,2))
 plot(modGehrels)
 print(anova(modGehrels))
 print(summary(modGehrels))
@@ -361,24 +390,36 @@ print(anova(modGehrels2))
 print(summary(modGehrels2))
 #
 modGehrels3<-lm(y2~x2)
-par(mfrow=c(2,2))
+par(mfrow=c(1,1))
 plot(modGehrels3)
 print(anova(modGehrels3))
 print(summary(modGehrels3))
+#
+modGehrels4<-lm(y3~x3)
+par(mfrow=c(1,1))
+plot(modGehrels4)
+print(anova(modGehrels4))
+print(summary(modGehrels4))
 ##
-newx <- seq(min(x), max(x), length.out=100)
-preds <- predict(modGehrels, newdata=data.frame(x=newx), interval='prediction')
+newx <- seq(min(x2), max(x2), length.out=100)
+preds <- predict(modGehrels3, newdata=data.frame(x2=newx), interval='prediction')
+##
+newx2 <- seq(min(x3), max(x3), length.out=100)
+preds2 <- predict(modGehrels4, newdata=data.frame(x3=newx2), interval='prediction')
 ##
 par(mfrow=c(1,1))
 par(mar=c(5,5,5,5))
 plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
 points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
-abline(modGehrels)
+abline(modGehrels3)
+abline(modGehrels4)
 #add dashed lines for confidence bands
-lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
-lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
-legend("bottomleft",
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'black')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'black')
+lines(10^newx2, 10^preds2[ ,3], lty = 'dashed', col = 'grey')
+lines(10^newx2, 10^preds2[ ,2], lty = 'dashed', col = 'grey')
+legend("bottomright",
        legend = c('Unknown', 'Mergers', 'Collapsars'),
        col = c('black', 'red', 'blue'),
        pch = c(20, 4, 8))
@@ -391,82 +432,267 @@ plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black
 points(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`, pch=20, col='grey')
 points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
-abline(modGehrels)
+abline(modGehrels3, col='black')
+abline(modGehrels4, col='grey')
 #add dashed lines for confidence bands
-lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
-lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
-legend("bottomleft",
+lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'black')
+lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'black')
+lines(10^newx2, 10^preds2[ ,3], lty = 'dashed', col = 'grey')
+lines(10^newx2, 10^preds2[ ,2], lty = 'dashed', col = 'grey')
+legend("bottomright",
        legend = c('Unknown Long', "Unknown Short", 'Mergers', 'Collapsars'),
        col = c('black', 'grey', 'red', 'blue'),
        pch = c(20, 20, 4, 8))
 ####
-Gehrels_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
-Gehrels_S6_Data<-Gehrels_S6_Data[-c(40), ] #removed an outlier from the linear model
-collapsar_mask=Gehrels_S6_Data$Name %in% Collapsars
-merger_mask=Gehrels_S6_Data$Name %in% Mergers
-Gehrels_S6_collapsars=Gehrels_S6_Data[collapsar_mask, ]
-Gehrels_S6_mergers=Gehrels_S6_Data[merger_mask, ]
-Gehrels_S6_unknown=Gehrels_S6_Data[!c(collapsar_mask+merger_mask), ]
-long_mask=which(Gehrels_S6_unknown$t90>4.5)
-short_mask=which(Gehrels_S6_unknown$t90<=4.5)
-Gehrels_S6_Long=Gehrels_S6_unknown[long_mask, ]
-Gehrels_S6_Short=Gehrels_S6_unknown[short_mask, ]
-x<-log10(Gehrels_S6_Data$Prompt_E_iso)
-y<-log10(Gehrels_S6_Data$`X-ray_F11`)
-z<-log10(Gehrels_S6_Data$t90)
-x2<-log10(Gehrels_S6_Long$Prompt_E_iso)
-y2<-log10(Gehrels_S6_Long$`X-ray_F11`)
-z2<-log10(Gehrels_S6_Long$t90)
+# Gehrels_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
+# Gehrels_S6_Data<-Gehrels_S6_Data[-c(40), ] #removed an outlier from the linear model
+# collapsar_mask=Gehrels_S6_Data$Name %in% Collapsars
+# merger_mask=Gehrels_S6_Data$Name %in% Mergers
+# Gehrels_S6_collapsars=Gehrels_S6_Data[collapsar_mask, ]
+# Gehrels_S6_mergers=Gehrels_S6_Data[merger_mask, ]
+# Gehrels_S6_unknown=Gehrels_S6_Data[!c(collapsar_mask+merger_mask), ]
+# long_mask=which(Gehrels_S6_unknown$t90>4.5)
+# short_mask=which(Gehrels_S6_unknown$t90<=4.5)
+# Gehrels_S6_Long=Gehrels_S6_unknown[long_mask, ]
+# Gehrels_S6_Short=Gehrels_S6_unknown[short_mask, ]
+# x<-log10(Gehrels_S6_Data$Prompt_E_iso)
+# y<-log10(Gehrels_S6_Data$`X-ray_F11`)
+# z<-log10(Gehrels_S6_Data$t90)
+# x2<-log10(Gehrels_S6_Long$Prompt_E_iso)
+# y2<-log10(Gehrels_S6_Long$`X-ray_F11`)
+# z2<-log10(Gehrels_S6_Long$t90)
+# ##
+# modGehrels<-lm(y~x)
+# par(mfrow=c(2,2))
+# plot(modGehrels)
+# print(anova(modGehrels))
+# print(summary(modGehrels))
+# #
+# modGehrels2<-lm(y~x+z)
+# plot(modGehrels2)
+# print(anova(modGehrels2))
+# print(summary(modGehrels2))
+# #
+# modGehrels3<-lm(y2~x2)
+# par(mfrow=c(2,2))
+# plot(modGehrels3)
+# print(anova(modGehrels3))
+# print(summary(modGehrels3))
+# ##
+# newx <- seq(min(x), max(x), length.out=100)
+# preds <- predict(modGehrels, newdata=data.frame(x=newx), interval='prediction')
+# ##
+# par(mfrow=c(1,1))
+# par(mar=c(5,5,5,5))
+# plot(Gehrels_S6_unknown$Prompt_E_iso, Gehrels_S6_unknown$`X-ray_F11`, pch=20,  xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
+# # points(Gehrels_S6_mergers$Prompt_E_iso, Gehrels_S6_mergers$`X-ray_F11`, pch=4, col='red')
+# points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
+# abline(modGehrels)
+# #add dashed lines for confidence bands
+# lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+# lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
+# legend("bottomright",
+#        legend = c('Unknown', 'Collapsars'),
+#        col = c('black', 'blue'),
+#        pch = c(20, 8))
+# ##
+# # newx <- seq(min(x2), max(x2), length.out=100)
+# # preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
+# ##
+# par(mar=c(5,5,5,5))
+# plot(Gehrels_S6_Long$Prompt_E_iso, Gehrels_S6_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
+# points(Gehrels_S6_Short$Prompt_E_iso, Gehrels_S6_Short$`X-ray_F11`, pch=20, col='grey')
+# # points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
+# points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
+# abline(modGehrels)
+# #add dashed lines for confidence bands
+# lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
+# lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
+# legend("bottomright",
+#        legend = c('Unknown Long', "Unknown Short", 'Collapsars'),
+#        col = c('black', 'grey', 'blue'),
+#        pch = c(20, 20, 8))
 ##
-modGehrels<-lm(y~x)
-par(mfrow=c(2,2))
-plot(modGehrels)
-print(anova(modGehrels))
-print(summary(modGehrels))
-#
-modGehrels2<-lm(y~x+z)
-plot(modGehrels2)
-print(anova(modGehrels2))
-print(summary(modGehrels2))
-#
-modGehrels3<-lm(y2~x2)
-par(mfrow=c(2,2))
-plot(modGehrels3)
-print(anova(modGehrels3))
-print(summary(modGehrels3))
+missing<-which(!complete.cases(Gehrels_S3_Data))
+no_NA_Gehrels_Data<- Gehrels_S3_Data[-missing, ]
+collapsar_mask<-no_NA_Gehrels_Data$Name %in% Collapsars
+merger_mask<-no_NA_Gehrels_Data$Name %in% Mergers
+Classification<-rep("Unknown", nrow(no_NA_Gehrels_Data))
+Classification[collapsar_mask]<-"collapsar"
+Classification[merger_mask]<-"merger"
+new_Gehrels_S3_Data<-data.frame(cbind(log10(no_NA_Gehrels_Data$Prompt_Flu), log10(no_NA_Gehrels_Data$`X-ray_F11`), log10(no_NA_Gehrels_Data$t90), Classification))
+colnames(new_Gehrels_S3_Data)<-c("Prompt_Flu", "X_ray_F11", "t90", "Classification")
+# model <- randomForest(formula = no_NA_H_2b_Data$Classification ~ ., data = no_NA_H_2b_Data)
+unknown_remover<-which(new_Gehrels_S3_Data$Classification=='Unknown')
+merger_mask<-which(new_Gehrels_S3_Data$Classification=='merger')
+collapsar_mask<-which(new_Gehrels_S3_Data$Classification=='collapsar')
+training_set=new_Gehrels_S3_Data[-unknown_remover, ]
+# svmfit<-svm(training_set$as.factor.Classification. ~ ., data = training_set, type = "C-classification", cost = 1.0, kernel = "sigmoid")
+training_set$Classification <- as.factor(training_set$Classification)
+table(training_set$Classification)
+rf_fit<-randomForest(Classification ~ ., data = training_set, importance = TRUE, proximity = TRUE)
+print(rf_fit)
+colnames(no_NA_Gehrels_Data)<-c("Name", "Prompt_Flu", "X_ray_F11", "t90")
+predict_rf<-predict(rf_fit, no_NA_Gehrels_Data, type="prob")
+new_table<-predict_rf
+new_table<-cbind(no_NA_Gehrels_Data$Name, new_table)
+colnames(new_table)<-c("Name", "P_collapsar", "P_merger")
+new_table<-data.frame(new_table)
+write.csv(new_table, "/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Classification.csv")
 ##
-newx <- seq(min(x), max(x), length.out=100)
-preds <- predict(modGehrels, newdata=data.frame(x=newx), interval='prediction')
+Goldstein_S3_Data=Goldstein_S2_Data[Fermi_overlap_mask, ]
+missing<-which(!complete.cases(Goldstein_S3_Data)) #no, I don't know why it doesn't work on incomplete data. Ask a statistics book
+no_NA_Goldstein_S3_Data<- Goldstein_S3_Data[-missing, ]
+collapsar_mask<-no_NA_Goldstein_S3_Data$Name %in% Collapsars
+merger_mask<-no_NA_Goldstein_S3_Data$Name %in% Mergers
+Classification<-rep("Unknown", nrow(no_NA_Goldstein_S3_Data))
+Classification[collapsar_mask]<-"collapsar"
+Classification[merger_mask]<-"merger"
+new_Goldstein_S3_Data<-data.frame(cbind(log10(no_NA_Goldstein_S3_Data$`Peak E. over Flue.`), log10(no_NA_Goldstein_S3_Data$t90), as.factor(Classification)))
+colnames(new_Goldstein_S3_Data)<-c("Peak_E_over_Flu", "t90", "as.factor.Classification.")
+predicted_svm<-predict(svmfit, new_Goldstein_S3_Data, probability=TRUE) #predict the data from the next test so we can compare the two. This won't knit, btw
+new_table<-attr(predicted_svm, "probabilities") 
+new_table<-cbind(no_NA_Goldstein_S3_Data$Name, new_table)
+colnames(new_table)<-c("Name", "P_collapsar", "P_merger")
+new_table<-data.frame(new_table)
+write.csv(new_table, "/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Classification.csv")
+```
+
+```{r annoying bootstrap, echo=FALSE}
+## straight up stolen from my MA392 notes by Megan Heyman
+library(formula.tools)
+library(RCurl)
+s4<-getURL("https://raw.githubusercontent.com/elegacy/lm.boot/master/residual.boot.R", ssl.verifypeer=FALSE)
+s5<-getURL("https://raw.githubusercontent.com/elegacy/lm.boot/master/wild.boot.R", ssl.verifypeer=FALSE)
+eval(parse(text=s4))
+eval(parse(text=s5))
+remove(s4, s5)
 ##
-par(mfrow=c(1,1))
-par(mar=c(5,5,5,5))
-plot(Gehrels_S6_unknown$Prompt_E_iso, Gehrels_S6_unknown$`X-ray_F11`, pch=20,  xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
-# points(Gehrels_S6_mergers$Prompt_E_iso, Gehrels_S6_mergers$`X-ray_F11`, pch=4, col='red')
-points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
-abline(modGehrels)
-#add dashed lines for confidence bands
-lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
-lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
-legend("bottomleft",
-       legend = c('Unknown', 'Collapsars'),
-       col = c('black', 'blue'),
-       pch = c(20, 8))
-##
-# newx <- seq(min(x2), max(x2), length.out=100)
-# preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
-##
-par(mar=c(5,5,5,5))
-plot(Gehrels_S6_Long$Prompt_E_iso, Gehrels_S6_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
-points(Gehrels_S6_Short$Prompt_E_iso, Gehrels_S6_Short$`X-ray_F11`, pch=20, col='grey')
-# points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
-points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
-abline(modGehrels)
-#add dashed lines for confidence bands
-lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'green')
-lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'green')
-legend("bottomleft",
-       legend = c('Unknown Long', "Unknown Short", 'Collapsars'),
-       col = c('black', 'grey', 'blue'),
-       pch = c(20, 20, 8))
+set.seed(167)
+errorDistn<-"t5" #choose from "t5", "U(-5, 5)"
+n <- 200 #sample size
+bootType<-"residual" #type of bootstrap ("residual or "wild"). we'll do the residual first.
+R<- 3 #number of original samples to generate
+slope<-modGehrels3$coefficients[2] #true beta 1 (unlikely)
+intercept<-modGehrels3$coefficients[1] #true beta 0 (unlikely)
+B<-10000 #number of bootstrap samples
+
+ls.slope<-rep(NA, R) #it can put the LS estimates of the slopes in this vector
+ls.intercept<-rep(NA, R) #and the LS estimates of the intercepts in this one
+b.slope<-matrix(NA, nrow = B, ncol=R) #and then the bootstrap estimated slopes in this vector
+b.intercept<-matrix(NA, nrow = B, ncol=R) #and the bootstrap estimated intercepts in this one
+
+## finally we can start the simulation proper
+for(r in 1:R){
+  x<-runif(n, min(x2), max(x2)) #generate something called a fixed predictor, based on a uniform distribution. I chose to change this from [-1, 2] to the range of our original predictor variable. The actual distribution of detections isn't normal, but that's a technicality.
+  if(errorDistn=="t5"){
+    y<-intercept+slope*x+rt(n, df=5)
+  }else{
+    y<-intercept+slope*x+runif(n, -5, 5)
+  }
+  #fit the LSE model
+  theModel<- lm(y~x)
+  ls.slope[r]<-as.numeric(coef(theModel)[2])
+  ls.intercept[r]<-as.numeric(coef(theModel)[1])
+  #get bootstrap estimates
+  if(bootType=="wild"){
+    theBootEst <- wild.boot(y~x, B=B)$bootEstParam
+  }else{
+    theBootEst <- residual.boot(y~x, B=B)$bootEstParam
+  }
+  b.intercept[ , r] <- theBootEst[ , 1]
+  b.slope[ , r] <- theBootEst[ , 2]
+}
+
+##let's plot the results##
+par(mfrow=c(1,2))
+for(r in 1:R){
+ # make density curve of slope estimates
+  slopeDens <- density(b.slope[,r])
+  plot(slopeDens, main=paste("Estimated slope for n=200, t_5 errors, residual boot., sample", r))
+  abline(v=slope, col="red")
+  abline(v=ls.slope, col="blue", lty=2)
+  legend("topright", c("Boot. Distn.", "Linear Model", "L.S.Est."), col=c(1,2,3), lty=c(1,1,2), cex = 0.8)
+  #do the same thing for the intercepts
+  interceptDens <- density(b.intercept[,r])
+  plot(interceptDens, main=paste("Estimated intercept for n=200, t_5 errors, residual boot., sample", r))
+  abline(v=intercept, col="red")
+  abline(v=ls.intercept, col="blue", lty=2)
+  legend("topright", c("Boot. Distn.", "Linear Model", "L.S.Est."), col=c(1,2,3), lty=c(1,1,2), cex = 0.8)
+}
+normalized_sorted_slopes <-(sort(b.slope, method="quick"))/abs(max(b.slope)-min(b.slope))
+add_on<-normalized_sorted_slopes[1]
+normalized_sorted_slopes <- normalized_sorted_slopes-add_on #re-renormalizes it so it's easier to find the percentages
+#normalized_sorted_intercepts <- (sort(b.intercept, method="quick"))/max(abs(b.intercept))
+#normalized_sorted_intercepts <- normalized_sorted_intercepts-normalized_sorted_intercepts[1] 
+#I just realized we don't care about this
+#anyway, back to finding where we're more than 99% certain
+lowest_value_slope<-max(which(normalized_sorted_slopes<0.005)) #this is the left side of the confidence interval, which is more like 100%
+highest_value_slope<-min(which(normalized_sorted_slopes>0.995)) #and this is the right side, which is about 99.5%
+print(paste("We are more than 99% confident using a residual bootstrap that as the prompt fluence rises by a factor of ten ergs, the afterglow x-ray flux at 11 hours will change by between", 10^(normalized_sorted_slopes[lowest_value_slope]*abs(max(b.slope)-min(b.slope))+add_on), " and ", 10^(normalized_sorted_slopes[highest_value_slope]*abs(max(b.slope)-min(b.slope))+add_on), "ergs on average."))
+```
+```{r other annoying bootstrap}
+set.seed(173)
+errorDistn<-"t5" #choose from "t5", "U(-5, 5)"
+n <- 200 #sample size
+bootType<-"wild" #type of bootstrap ("residual or "wild"). we'll do the residual first.
+R<- 3 #number of original samples to generate
+slope<-modGehrels4$coefficients[2] #true beta 1 (unlikely)
+intercept<-modGehrels4$coefficients[1] #true beta 0 (unlikely)
+B<-10000 #number of bootstrap samples
+
+ls.slope<-rep(NA, R) #it can put the LS estimates of the slopes in this vector
+ls.intercept<-rep(NA, R) #and the LS estimates of the intercepts in this one
+b.slope<-matrix(NA, nrow = B, ncol=R) #and then the bootstrap estimated slopes in this vector
+b.intercept<-matrix(NA, nrow = B, ncol=R) #and the bootstrap estimated intercepts in this one
+
+## finally we can start the simulation proper
+for(r in 1:R){
+  x<-runif(n, min(x2), max(x2)) #generate something called a fixed predictor, based on a uniform distribution. I chose to change this from [-1, 2] to the range of our original predictor variable. The actual distribution of detections isn't normal, but that's a technicality.
+  if(errorDistn=="t5"){
+    y<-intercept+slope*x+rt(n, df=5)
+  }else{
+    y<-intercept+slope*x+runif(n, -5, 5)
+  }
+  #fit the LSE model
+  theModel<- lm(y~x)
+  ls.slope[r]<-as.numeric(coef(theModel)[2])
+  ls.intercept[r]<-as.numeric(coef(theModel)[1])
+  #get bootstrap estimates
+  if(bootType=="wild"){
+    theBootEst <- wild.boot(y~x, B=B)$bootEstParam
+  }else{
+    theBootEst <- residual.boot(y~x, B=B)$bootEstParam
+  }
+  b.intercept[ , r] <- theBootEst[ , 1]
+  b.slope[ , r] <- theBootEst[ , 2]
+}
+
+##let's plot the results##
+par(mfrow=c(1,2))
+for(r in 1:R){
+ # make density curve of slope estimates
+  slopeDens <- density(b.slope[,r])
+  plot(slopeDens, main=paste("Estimated slope for n=200, t_5 errors, residual boot., sample", r))
+  abline(v=slope, col="red")
+  abline(v=ls.slope, col="blue", lty=2)
+  legend("topright", c("Boot. Distn.", "Linear Model", "L.S.Est."), col=c(1,2,3), lty=c(1,1,2), cex = 0.8)
+  #do the same thing for the intercepts
+  interceptDens <- density(b.intercept[,r])
+  plot(interceptDens, main=paste("Estimated intercept for n=200, t_5 errors, residual boot., sample", r))
+  abline(v=intercept, col="red")
+  abline(v=ls.intercept, col="blue", lty=2)
+  legend("topright", c("Boot. Distn.", "Linear Model", "L.S.Est."), col=c(1,2,3), lty=c(1,1,2), cex = 0.8)
+}
+normalized_sorted_slopes <-(sort(b.slope, method="quick"))/abs(max(b.slope)-min(b.slope))
+add_on<-normalized_sorted_slopes[1]
+normalized_sorted_slopes <- normalized_sorted_slopes-add_on #re-renormalizes it so it's easier to find the percentages
+#normalized_sorted_intercepts <- (sort(b.intercept, method="quick"))/max(abs(b.intercept))
+#normalized_sorted_intercepts <- normalized_sorted_intercepts-normalized_sorted_intercepts[1] 
+#I just realized we don't care about this
+#anyway, back to finding where we're more than 99% certain
+lowest_value_slope<-max(which(normalized_sorted_slopes<0.005)) #this is the left side of the confidence interval, which is more like 100%
+highest_value_slope<-min(which(normalized_sorted_slopes>0.995)) #and this is the right side, which is about 99.5%
+print(paste("We are more than 99% confident using a residual bootstrap that as the prompt fluence rises by a factor of ten ergs, the afterglow x-ray flux at 11 hours will change by between", 10^(normalized_sorted_slopes[lowest_value_slope]*abs(max(b.slope)-min(b.slope))+add_on), " and ", 10^(normalized_sorted_slopes[highest_value_slope]*abs(max(b.slope)-min(b.slope))+add_on), "ergs on average."))
 ```
 
