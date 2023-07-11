@@ -29,7 +29,7 @@ set.seed(1729)
 ```
 
 ```{r defining the special bursts, echo=FALSE}
-Collapsars = c(050416461.0, 50525002.0, 050824966.0, 060218148.0, 060729800.0, 060904104.0, 070419447.0, 071025172.0, 071112772.0, 080319258.0, 081007224.0, 090618353.0, 091127976.0, 100316531.0, 100418882.0, 101219686.0, 101225776.0, 111209300.0, 111211928.0, 111228656.0, 120422300.0, 120714888.0, 120729455.0, 130215063.0, 130427324.0, 130702003.0, 130831544.0, 140206303.0, 140606133.0, 150818483.0, 161219783.0, 161228552.0, 171010792.0, 171205306.0, 180720598.0, 180728728.0, 190114872.0, 190829830.0, 200826187.0, 210210083.0, 211023545.0, 221009553.0, 200826187.0)
+Collapsars = c(050416461.0, 50525002.0, 050824966.0, 060218148.0, 060729800.0, 060904104.0, 070419447.0, 071025172.0, 071112772.0, 080319258.0, 081007224.0, 090618353.0, 091127976.0, 100316531.0, 100418882.0, 101219686.0, 101225776.0, 111209300.0, 111211928.0, 111228656.0, 120422300.0, 120714888.0, 120729455.0, 130215063.0, 130427324.0, 130702003.0, 130831544.0, 140206303.0, 140606133.0, 150818483.0, 161219783.0, 161228552.0, 171010792.0, 171205306.0, 180720598.0, 180728728.0, 190114872.0, 190829830.0, 200826187.0, 210210083.0, 211023545.0, 221009553.0, 200826187.0, 150210935.0)
 Mergers=c(070809807.0, 130603659.0, 150101641.0, 160624477.0, 160821936.0, 170817528.0, 200522487.0, 060614530.0, 111005336.0, 120304248.0, 211211549.0, 230307655.0, 050509166.0, 050709942.0, 051210240.0, 070714207.0, 071227842.0, 080503518.0, 080905499.0, 090515198.0, 160303454.0)
 ```
 
@@ -71,7 +71,7 @@ merger_mask=H_1_Data_copy$Name %in% Mergers
 H_1_Data_collapsars=H_1_Data_copy[collapsar_mask, ]
 H_1_Data_mergers=H_1_Data_copy[merger_mask, ]
 H_1_Data_unknown=H_1_Data_copy[!c(collapsar_mask+merger_mask), ]
-plot(H_1_Data_unknown$Avg..Afterglow.Decay.Rate~H_1_Data_unknown$Prompt.Isotropic.Energy, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Redshift-Corrected Afterglow Decay Rate 0.2-10 keV (photons s^-2, XRT)', width = 50), collapse = "\n"), main=paste(strwrap('Isotropic-Equivalent Energy and Average Afterglow Decay Lack of a Relationship', width = 50), collapse = "\n"), pch=20)
+plot(H_1_Data_unknown$Avg..Afterglow.Decay.Rate~H_1_Data_unknown$Prompt.Isotropic.Energy, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Redshift-Corrected Afterglow Decay Rate 0.3-10 keV (photons s^-2, XRT)', width = 50), collapse = "\n"), main=paste(strwrap('Isotropic-Equivalent Energy and Average Afterglow Decay Lack of a Relationship', width = 50), collapse = "\n"), pch=20)
 # points(H_1_Data_mergers$Avg..Afterglow.Decay.Rate~H_1_Data_mergers$Prompt.Isotropic.Energy, pch=4, col='red')
 points(H_1_Data_collapsars$Avg..Afterglow.Decay.Rate~H_1_Data_collapsars$Prompt.Isotropic.Energy, pch=8, col='blue')
 abline(mod1)
@@ -121,7 +121,7 @@ long_mask=which(H_2a_Data_unknown$t90>4.5)
 short_mask=which(H_2a_Data_unknown$t90<=4.5)
 H_2a_Data_Long=H_2a_Data_unknown[long_mask, ]
 H_2a_Data_Short=H_2a_Data_unknown[short_mask, ]
-plot(H_2a_Data_Long$Plateau.E_iso~H_2a_Data_Long$Prompt.E_iso, pch=20, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"), log="xy", col='black')
+plot(H_2a_Data_Long$Plateau.E_iso~H_2a_Data_Long$Prompt.E_iso, pch=20, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.3-10 keV (erg, XRT)', width = 50), collapse = "\n"), log="xy", col='black')
 points(H_2a_Data_Short$Plateau.E_iso~H_2a_Data_Short$Prompt.E_iso, pch=20, col='grey')
 # points(H_2a_Data_mergers$Plateau.E_iso~H_2a_Data_mergers$Prompt.E_iso, pch=4, col='red', log="xy")
 points(H_2a_Data_collapsars$Plateau.E_iso~H_2a_Data_collapsars$Prompt.E_iso, pch=8, col='blue')
@@ -159,7 +159,7 @@ par(mar=c(5,5,5,5))
 par(mfrow=c(1,1))
 H_2a_Data_collapsars_2=subset(H_2a_Data_collapsars, log10(H_2a_Data_collapsars$Prompt.E_iso) > 51.5)
 H_2a_Data_unknown_2=subset(H_2a_Data_unknown, log10(H_2a_Data_unknown$Prompt.E_iso) > 51.5)
-plot(H_2a_Data_unknown_2$Plateau.E_iso~H_2a_Data_unknown_2$Prompt.E_iso, pch=20, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 50), collapse = "\n"), log="xy")
+plot(H_2a_Data_unknown_2$Plateau.E_iso~H_2a_Data_unknown_2$Prompt.E_iso, pch=20, xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.3-10 keV (erg, XRT)', width = 50), collapse = "\n"), log="xy")
 # points(H_2a_Data_mergers$Plateau.E_iso~H_2a_Data_mergers$Prompt.E_iso, pch=4, col='red', log="xy")
 points(H_2a_Data_collapsars_2$Plateau.E_iso~H_2a_Data_collapsars_2$Prompt.E_iso, pch=8, col='blue')
 abline(mod2a1)
@@ -171,7 +171,7 @@ legend("topleft",
        col = c('black', 'blue'),
        pch = c(20, 8))
 
-s3d <-scatterplot3d(x=log10(H_2a_Data_unknown$Prompt.E_iso), y=log10(H_2a_Data_unknown$Plateau.E_iso), z=log10(H_2a_Data_unknown$t90), pch=20, color ='black', xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.2-10 keV (erg, XRT)', width = 25), collapse = "\n"), zlab="t90 (s, GBM)") 
+s3d <-scatterplot3d(x=log10(H_2a_Data_unknown$Prompt.E_iso), y=log10(H_2a_Data_unknown$Plateau.E_iso), z=log10(H_2a_Data_unknown$t90), pch=20, color ='black', xlab='Prompt Isotropic Energy 10kev-10MeV (erg, GBM)', ylab=paste(strwrap('Plateau Afterglow Isotropic Energy 0.3-10 keV (erg, XRT)', width = 25), collapse = "\n"), zlab="t90 (s, GBM)") 
 s3d$points3d(x=log10(H_2a_Data_collapsars$Prompt.E_iso), y=log10(H_2a_Data_collapsars$Plateau.E_iso), z=log10(H_2a_Data_collapsars$t90), pch=8, col ='blue')
 # plot_ly(x=H_2a_Data_copy$Prompt.E_iso, y=H_2a_Data_copy$Plateau.E_iso, z=log10(H_2a_Data_copy$t90), color=log10(H_2a_Data_copy$t90), colors = c('green', 'blue'))
 10^confint(mod2a, 'x', level=0.99)
@@ -200,28 +200,28 @@ H_2b_Data_short_unknown<-short_H_2b[!c(collapsar_mask+merger_mask), ]
 # long_y<-log10(long_H_2b[[3]])
 # short_x<-log10(short_H_2b[[2]])
 # short_y<-log10(short_H_2b[[3]])
-plot(H_2b_Data_long_unknown$End.Plateau.Flux~H_2b_Data_long_unknown$Prompt.Fluence, col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="The Long Burst Prompt Fluence versus End-Plateau Flux", xlim=c(5e-8, 5e-3))
+plot(H_2b_Data_long_unknown$End.Plateau.Flux~H_2b_Data_long_unknown$Prompt.Fluence, col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="The Long Burst Prompt Fluence versus End-Plateau Flux", xlim=c(5e-8, 5e-3))
 points(H_2b_Data_long_mergers$End.Plateau.Flux~H_2b_Data_long_mergers$Prompt.Fluence, col='red', pch=4)
 points(H_2b_Data_long_collapsars$End.Plateau.Flux~H_2b_Data_long_collapsars$Prompt.Fluence, col='blue', pch=8)
 legend("topleft",
        legend = c('Unknown', 'Mergers', 'Collapsars'),
        col = c('black','red', 'blue'),
        pch = c(20, 4, 8))
-plot(H_2b_Data_short_unknown$End.Plateau.Flux~H_2b_Data_short_unknown$Prompt.Fluence, col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="The Short Burst Prompt Fluence versus End-Plateau Flux")
+plot(H_2b_Data_short_unknown$End.Plateau.Flux~H_2b_Data_short_unknown$Prompt.Fluence, col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="The Short Burst Prompt Fluence versus End-Plateau Flux")
 points(H_2b_Data_short_mergers$End.Plateau.Flux~H_2b_Data_short_mergers$Prompt.Fluence, col='red', pch=4)
 points(H_2b_Data_short_collapsars$End.Plateau.Flux~H_2b_Data_short_collapsars$Prompt.Fluence, col='blue', pch=8)
 legend("topleft",
        legend = c('Unknown'),
        col = c('black'),
        pch = c(20, 4, 8))
-plot(c(H_2b_Data_long_unknown$End.Plateau.Flux,H_2b_Data_short_unknown$End.Plateau.Flux)~c(H_2b_Data_long_unknown$Prompt.Fluence,H_2b_Data_short_unknown$Prompt.Fluence), col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="All Burst Prompt Fluences versus End-Plateau Fluxes", xlim=c(5e-8, 5e-3))
+plot(c(H_2b_Data_long_unknown$End.Plateau.Flux,H_2b_Data_short_unknown$End.Plateau.Flux)~c(H_2b_Data_long_unknown$Prompt.Fluence,H_2b_Data_short_unknown$Prompt.Fluence), col='black', pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab="End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", log = "xy", main="All Burst Prompt Fluences versus End-Plateau Fluxes", xlim=c(5e-8, 5e-3))
 points(c(H_2b_Data_long_mergers$End.Plateau.Flux,H_2b_Data_short_mergers$End.Plateau.Flux)~c(H_2b_Data_long_mergers$Prompt.Fluence,H_2b_Data_short_mergers$Prompt.Fluence), col='red', pch=4)
 points(c(H_2b_Data_long_collapsars$End.Plateau.Flux,H_2b_Data_short_collapsars$End.Plateau.Flux)~c(H_2b_Data_long_collapsars$Prompt.Fluence,H_2b_Data_short_collapsars$Prompt.Fluence), col='blue', pch=8)
 legend("topleft",
        legend = c('Unknown', 'Mergers', 'Collapsars'),
        col = c('black','red', 'blue'),
        pch = c(20, 4, 8))
-s3d <-scatterplot3d(x=log10(H_2b_Data_long_unknown$End.Plateau.Flux), y=log10(H_2b_Data_long_unknown$End.Plateau.Flux), z=log10(H_2b_Data_long_unknown$t90), color="black", pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"), zlab="t90 (s, GBM)", main = paste(strwrap("Three-Dimensional Plot of all Data points Motivating Machine Learning by Separation of Long and Short Bursts, Though Not Progenitors", width = 50), collapse = "\n"), xlim = c(-14, -3), zlim = c(-1, 3))
+s3d <-scatterplot3d(x=log10(H_2b_Data_long_unknown$End.Plateau.Flux), y=log10(H_2b_Data_long_unknown$End.Plateau.Flux), z=log10(H_2b_Data_long_unknown$t90), color="black", pch=20, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"), zlab="t90 (s, GBM)", main = paste(strwrap("Three-Dimensional Plot of all Data points Motivating Machine Learning by Separation of Long and Short Bursts, Though Not Progenitors", width = 50), collapse = "\n"), xlim = c(-14, -3), zlim = c(-1, 3))
 s3d$points3d(x=log10(H_2b_Data_short_unknown$Prompt.Fluence), y=log10(H_2b_Data_short_unknown$End.Plateau.Flux), z=log10(H_2b_Data_short_unknown$t90), col="grey", pch=20)
 s3d$points3d(x=c(log10(H_2b_Data_long_mergers$Prompt.Fluence),log10(H_2b_Data_short_mergers$Prompt.Fluence)), y=c(log10(H_2b_Data_long_mergers$End.Plateau.Flux),log10(H_2b_Data_short_mergers$End.Plateau.Flux)), z=c(log10(H_2b_Data_long_mergers$t90),log10(H_2b_Data_short_mergers$t90)), col="red", pch=4)
 s3d$points3d(x=c(log10(H_2b_Data_long_collapsars$Prompt.Fluence),log10(H_2b_Data_short_collapsars$Prompt.Fluence)), y=c(log10(H_2b_Data_long_collapsars$End.Plateau.Flux),log10(H_2b_Data_short_collapsars$End.Plateau.Flux)), z=c(log10(H_2b_Data_long_collapsars$t90),log10(H_2b_Data_short_collapsars$t90)), col="blue", pch=8)
@@ -245,8 +245,8 @@ colnames(new_H_2b_Data)<-c("Prompt.Fluence", "End.Plateau.Flux", "t90", "as.fact
 # model <- randomForest(formula = no_NA_H_2b_Data$Classification ~ ., data = no_NA_H_2b_Data)
 svmfit<-svm(new_H_2b_Data$as.factor.Classification. ~ ., data = new_H_2b_Data, type = "C-classification", cost = 1.0, kernel = "linear")
 print(svmfit)
-plot(svmfit, new_H_2b_Data, End.Plateau.Flux~Prompt.Fluence, slice = list(t90 = 0.5, t90 = 1), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"))
-plot(svmfit, new_H_2b_Data, End.Plateau.Flux~t90, slice = list(Prompt.Fluence = -5.5, Prompt.Fluence = -4.5), xlab="t90 (s, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"))
+plot(svmfit, new_H_2b_Data, End.Plateau.Flux~Prompt.Fluence, slice = list(t90 = 0.5, t90 = 1), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"))
+plot(svmfit, new_H_2b_Data, End.Plateau.Flux~t90, slice = list(Prompt.Fluence = -5.5, Prompt.Fluence = -4.5), xlab="t90 (s, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"))
 plot(svmfit, new_H_2b_Data, Prompt.Fluence~t90, slice = list(End.Plateau.Flux = -10, End.Plateau.Flux  = -9), xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)",  ylab="t90 (s, GBM)",)
 # Simulate some data
 n    = 100
@@ -270,7 +270,7 @@ newdat.dv   = attr(newdat.pred, 'decision.values')
 newdat.dv   = array(newdat.dv, dim=rep(nnew, 3))
 
 # Fit/plot an isosurface to the decision boundary
-plot3d(x=new_H_2b_Data$Prompt.Fluence, y=new_H_2b_Data$End.Plateau.Flux, z=new_H_2b_Data$t90, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.2-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"), zlab="t90 (s, GBM)")
+plot3d(x=new_H_2b_Data$Prompt.Fluence, y=new_H_2b_Data$End.Plateau.Flux, z=new_H_2b_Data$t90, xlab="Prompt Fluence, 10keV-1MeV (erg cm^-2, GBM)", ylab=paste(strwrap("End Plateau Flux, 0.3-10 keV (erg s^-1 cm^-2, XRT)", width = 25), collapse = "\n"), zlab="t90 (s, GBM)")
 contour3d(newdat.dv, level=0, x=newdat.list$Prompt.Fluence, y=newdat.list$End.Plateau.Flux, z=newdat.list$t90, add=T)
 ```
 
@@ -372,8 +372,8 @@ legend("topleft",
 
 ```{r Gehrels Hypothesis, echo=FALSE}
 Gehrels_S3_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_3_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"))
-actually_usable_mask<-which(log10(Gehrels_S3_Data$`X-ray_F11`)< -(14+log10(8)))
-Gehrels_S3_Data<-Gehrels_S3_Data[-c(actually_usable_mask), ]
+# actually_usable_mask<-which(log10(Gehrels_S3_Data$`X-ray_F11`)< -(14+log10(8)))
+# Gehrels_S3_Data<-Gehrels_S3_Data[-c(actually_usable_mask), ]
 # Gehrels_S3_Data<-Gehrels_S3_Data[-c(146), ] #removed an outlier from the linear model
 collapsar_mask=Gehrels_S3_Data$Name %in% Collapsars
 merger_mask=Gehrels_S3_Data$Name %in% Mergers
@@ -433,7 +433,7 @@ preds2 <- predict(modGehrels4, newdata=data.frame(x3=newx2), interval='predictio
 ##
 par(mfrow=c(1,1))
 par(mar=c(5,5,5,5))
-plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
+plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
 points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
 arrows(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`-Gehrels_S3_unknown$Flux_Err, Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`+Gehrels_S3_unknown$Flux_Err, length=0.05, angle=90, code=3)
@@ -458,7 +458,7 @@ legend("bottomright",
 # preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
 ##
 par(mar=c(5,5,5,5))
-plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
+plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
 points(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`, pch=20, col='grey')
 points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
@@ -523,7 +523,7 @@ legend("bottomright",
 # ##
 # par(mfrow=c(1,1))
 # par(mar=c(5,5,5,5))
-# plot(Gehrels_S6_unknown$Prompt_E_iso, Gehrels_S6_unknown$`X-ray_F11`, pch=20,  xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
+# plot(Gehrels_S6_unknown$Prompt_E_iso, Gehrels_S6_unknown$`X-ray_F11`, pch=20,  xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
 # # points(Gehrels_S6_mergers$Prompt_E_iso, Gehrels_S6_mergers$`X-ray_F11`, pch=4, col='red')
 # points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
 # abline(modGehrels)
@@ -539,7 +539,7 @@ legend("bottomright",
 # # preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
 # ##
 # par(mar=c(5,5,5,5))
-# plot(Gehrels_S6_Long$Prompt_E_iso, Gehrels_S6_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.2-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
+# plot(Gehrels_S6_Long$Prompt_E_iso, Gehrels_S6_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt E_iso 10kev-10MeV (erg, GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", ylim = c(1e-16, 1e-8))
 # points(Gehrels_S6_Short$Prompt_E_iso, Gehrels_S6_Short$`X-ray_F11`, pch=20, col='grey')
 # # points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
 # points(Gehrels_S6_collapsars$Prompt_E_iso, Gehrels_S6_collapsars$`X-ray_F11`, pch=8, col='blue')
@@ -784,26 +784,26 @@ colnames(new_table)<-c("Name", "t90", "E_P_Over_S", "P_collapsar", "P_merger")
 new_table<-data.frame(new_table)
 write.csv(new_table, "/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Classification.csv")
 colnames(Goldstein_S2_collapsars)<-c("Name", "Peak_E_over_Flu", "E_P_Over_S_Err", "`Hardness Ratio`", "t90", "t90_err")
+new_Goldstein_S2_Data<-new_Goldstein_S2_Data;
+new_Goldstein_S2_Data$Peak_E_over_Flu<-10^(new_Goldstein_S2_Data$Peak_E_over_Flu)
+# new_Goldstein_S2_Data$E_P_Over_S_Err<-10^(new_Goldstein_S2_Data$E_P_Over_S_Err)
+new_Goldstein_S2_Data$t90<-10^(new_Goldstein_S2_Data$t90)
+# new_Goldstein_S2_Data$t90_err<-10^(new_Goldstein_S2_Data$t90_err)
 new_Goldstein_S2_collapsars<-Goldstein_S2_collapsars;
-new_Goldstein_S2_collapsars$Peak_E_over_Flu<-log10(new_Goldstein_S2_collapsars$Peak_E_over_Flu)
-new_Goldstein_S2_collapsars$E_P_Over_S_Err<-log10(new_Goldstein_S2_collapsars$E_P_Over_S_Err)
-new_Goldstein_S2_collapsars$t90<-log10(new_Goldstein_S2_collapsars$t90)
-new_Goldstein_S2_collapsars$t90_err<-log10(new_Goldstein_S2_collapsars$t90_err)
+# new_Goldstein_S2_collapsars$Peak_E_over_Flu<-log10(new_Goldstein_S2_collapsars$Peak_E_over_Flu)
+# new_Goldstein_S2_collapsars$E_P_Over_S_Err<-log10(new_Goldstein_S2_collapsars$E_P_Over_S_Err)
+# new_Goldstein_S2_collapsars$t90<-log10(new_Goldstein_S2_collapsars$t90)
+# new_Goldstein_S2_collapsars$t90_err<-log10(new_Goldstein_S2_collapsars$t90_err)
 colnames(Goldstein_S2_mergers)<-c("Name", "Peak_E_over_Flu", "E_P_Over_S_Err", "`Hardness Ratio`", "t90", "t90_err")
 new_Goldstein_S2_mergers<-Goldstein_S2_mergers;
-new_Goldstein_S2_mergers$Peak_E_over_Flu<-log10(new_Goldstein_S2_mergers$Peak_E_over_Flu)
-new_Goldstein_S2_mergers$E_P_Over_S_Err<-log10(new_Goldstein_S2_mergers$E_P_Over_S_Err)
-new_Goldstein_S2_mergers$t90<-log10(new_Goldstein_S2_mergers$t90)
-new_Goldstein_S2_mergers$t90_err<-log10(new_Goldstein_S2_mergers$t90_err)
-ggplot(new_Goldstein_S2_Data[unknown_remover, ], aes(x = t90, y = Peak_E_over_Flu, colour = attr(predicted_svm, "probabilities")[,1])) +
-  geom_point(size = 1)+ylab(expression(E[p]/S[prompt]~' 10kev-10MeV ('~eV ~ cm^{2} ~ erg^{-1} ~ ', GBM)'))+xlab('t90 (s, GBM)')+scale_colour_gradient2(
-    low = "grey",
-    mid =muted("blue"),
-    high = "black",
-    midpoint = 0.5
-  )+geom_point(data = new_Goldstein_S2_mergers, color = "red")+geom_point(data = new_Goldstein_S2_collapsars, color = "cyan")+theme(legend.position="none")
+# new_Goldstein_S2_mergers$Peak_E_over_Flu<-log10(new_Goldstein_S2_mergers$Peak_E_over_Flu)
+# new_Goldstein_S2_mergers$E_P_Over_S_Err<-log10(new_Goldstein_S2_mergers$E_P_Over_S_Err)
+# new_Goldstein_S2_mergers$t90<-log10(new_Goldstein_S2_mergers$t90)
+# new_Goldstein_S2_mergers$t90_err<-log10(new_Goldstein_S2_mergers$t90_err)
+ggplot(new_Goldstein_S2_Data[unknown_remover, ], aes(x = t90, y = Peak_E_over_Flu, colour = attr(predicted_svm, "probabilities")[,1])) +geom_point(size = 1)+ylab(expression(E[p]/S[prompt]~' 10kev-10MeV ('~keV ~ cm^{2} ~ erg^{-1} ~ ', GBM)'))+xlab('t90 (s, GBM)')+scale_colour_gradient2(low = "grey",mid =muted("blue"), high = "black",  midpoint = 0.5, name="Inferred Collapsar\n Probability")+geom_point(data = new_Goldstein_S2_mergers, color = "red")+geom_point(data = new_Goldstein_S2_collapsars, color = "cyan")+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
 plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
-legend("topleft", title='Burst Types', legend = c('Assigned Collapsar', 'Assigned Equally Likely', 'Assigned Merger', 'Detected Collapsar', 'Detected Merger'), col = c('black', muted('blue'), 'grey', 'cyan', 'red'),  pch = c(20, 20, 20, 20, 20))
+legend("topleft", title='Known Burst Types', legend = c('Detected Collapsar', 'Detected Merger'), col = c( 'cyan', 'red'),  pch = c(20, 20))
+write.svm(svmfit, svm.file = "Goldstein-classifier.svm", scale.file = "Goldstein-classifier.scale")
 # plot(new_Goldstein_S2_Data[unknown_remover, ]$Peak_E_over_Flu~new_Goldstein_S2_Data[unknown_remover, ]$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=attr(predicted_svm, "probabilities")[,1], pch=20)
 # points(log10(Goldstein_S2_mergers$t90), log10(Goldstein_S2_mergers$`Peak E. over Flue.`), pch=4, col='#09622A')
 # points(log10(Goldstein_S2_collapsars$t90), log10(Goldstein_S2_collapsars$`Peak E. over Flue.`), pch=8, col='blue')
@@ -828,4 +828,69 @@ Second_predicted_svm<-predict(svmfit, new_Goldstein_S6_Data)
 plot(new_Goldstein_S6_Data$Peak_E_over_Flu~new_Goldstein_S6_Data$t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', col=Second_predicted_svm, pch=20)
 svm_check=predict(svmfit, new_Goldstein_S6_Data[-unknown_remover, ])
 confusionMatrix(svm_check, factor(new_Goldstein_S6_Data[-unknown_remover, ]$as.factor.Classification.), dnn = c("Prediction", "Reference"))
+```
+
+```{r Chunk just for error bars, echo=FALSE}
+Goldstein_S2_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Sample_2_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric")) [-c(3), ]
+par(mar=c(5,5,5,5))
+collapsar_mask=Goldstein_S2_Data$Name %in% Collapsars
+merger_mask=Goldstein_S2_Data$Name %in% Mergers
+Goldstein_S2_collapsars=Goldstein_S2_Data[collapsar_mask, ]
+Goldstein_S2_mergers=Goldstein_S2_Data[merger_mask, ]
+Goldstein_S2_unknown=Goldstein_S2_Data[!c(collapsar_mask+merger_mask), ]
+long_mask=which(Goldstein_S2_unknown$t90>4.2)
+short_mask=which(Goldstein_S2_unknown$t90<=4.2)
+Goldstein_S2_Long=Goldstein_S2_unknown[long_mask, ]
+Goldstein_S2_Short=Goldstein_S2_unknown[short_mask, ]
+plot(Goldstein_S2_Long$t90, Goldstein_S2_Long$`Peak E. over Flue.`, pch=20, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy", xlim=c(1e-2, 1e3))
+points(Goldstein_S2_Short$t90, Goldstein_S2_Short$`Peak E. over Flue.`, pch=20, col='grey')
+points(Goldstein_S2_mergers$t90, Goldstein_S2_mergers$`Peak E. over Flue.`, pch=4, col='red')
+points(Goldstein_S2_collapsars$t90, Goldstein_S2_collapsars$`Peak E. over Flue.`, pch=8, col='blue')
+legend("topleft",
+       legend = c('Unknown Long', 'Unknown Short', "Mergers", 'Collapsars'),
+       col = c('black', 'grey', 'red', 'blue'),
+       pch = c(20, 20, 4, 8))
+##
+missing<-which(!complete.cases(Goldstein_S2_Data))
+no_NA_Goldstein_S2_Data<- Goldstein_S2_Data[-missing, ]
+collapsar_mask<-no_NA_Goldstein_S2_Data$Name %in% Collapsars
+merger_mask<-no_NA_Goldstein_S2_Data$Name %in% Mergers
+# short_list<-which(no_NA_Goldstein_S2_Data$t90<4.2)
+# long_list<-which(no_NA_Goldstein_S2_Data$t90>4.2)
+Classification<-rep("Unknown", nrow(no_NA_Goldstein_S2_Data))
+# Classification[short_list]<-"merger"
+# Classification[long_list]<-"collapsar" 
+Classification[collapsar_mask]<-"collapsar"
+Classification[merger_mask]<-"merger"
+new_Goldstein_S2_Data<-data.frame(cbind(log10(no_NA_Goldstein_S2_Data$`Peak E. over Flue.`), log10(no_NA_Goldstein_S2_Data$E_P_Over_S_Err), log10(no_NA_Goldstein_S2_Data$t90), log10(no_NA_Goldstein_S2_Data$t90_err), as.factor(Classification)))
+colnames(new_Goldstein_S2_Data)<-c("Peak_E_over_Flu", "Peak_E_over_Flu_err", "t90", "t90_err", "as.factor.Classification.")
+# model <- randomForest(formula = no_NA_H_2b_Data$Classification ~ ., data = no_NA_H_2b_Data)
+unknown_remover<-which(new_Goldstein_S2_Data$as.factor.Classification.==3)
+merger_mask<-which(new_Goldstein_S2_Data$as.factor.Classification.==2)
+collapsar_mask<-which(new_Goldstein_S2_Data$as.factor.Classification.==1)
+training_set=new_Goldstein_S2_Data[-unknown_remover, ]
+svmfit<-svm(training_set$as.factor.Classification. ~ ., data = training_set, type = "C-classification", cost = 1.0, kernel = "sigmoid", probability=TRUE)
+print(svmfit)
+plot(svmfit, training_set, Peak_E_over_Flu~t90, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy")
+# points(log10(Goldstein_S2_unknown$t90), log10(Goldstein_S2_unknown$`Peak E. over Flue.`))
+predicted_svm<-predict(svmfit, new_Goldstein_S2_Data[unknown_remover, ], probability=TRUE)
+new_table<-attr(predicted_svm, "probabilities")
+new_table<-cbind(no_NA_Goldstein_S2_Data$Name, no_NA_Goldstein_S2_Data$t90, no_NA_Goldstein_S2_Data$`Peak E. over Flue.`, new_table)
+colnames(new_table)<-c("Name", "t90", "E_P_Over_S", "P_collapsar", "P_merger")
+new_table<-data.frame(new_table)
+write.csv(new_table, "/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Goldstein_Classification.csv")
+colnames(Goldstein_S2_collapsars)<-c("Name", "Peak_E_over_Flu", "Peak_E_over_Flu_err", "`Hardness Ratio`", "t90", "t90_err")
+new_Goldstein_S2_Data<-new_Goldstein_S2_Data;
+new_Goldstein_S2_Data$Peak_E_over_Flu<-10^(new_Goldstein_S2_Data$Peak_E_over_Flu)
+new_Goldstein_S2_Data$Peak_E_over_Flu_err<-10^(new_Goldstein_S2_Data$Peak_E_over_Flu_err)
+new_Goldstein_S2_Data$t90<-10^(new_Goldstein_S2_Data$t90)
+new_Goldstein_S2_Data$t90_err<-10^(new_Goldstein_S2_Data$t90_err)
+new_Goldstein_S2_collapsars<-Goldstein_S2_collapsars;
+# new_Goldstein_S2_collapsars$Peak_E_over_Flu<-log10(new_Goldstein_S2_collapsars$Peak_E_over_Flu)
+# new_Goldstein_S2_collapsars$E_P_Over_S_Err<-log10(new_Goldstein_S2_collapsars$E_P_Over_S_Err)
+# new_Goldstein_S2_collapsars$t90<-log10(new_Goldstein_S2_collapsars$t90)
+# new_Goldstein_S2_collapsars$t90_err<-log10(new_Goldstein_S2_collapsars$t90_err)
+colnames(Goldstein_S2_mergers)<-c("Name", "Peak_E_over_Flu", "Peak_E_over_Flu_err", "`Hardness Ratio`", "t90", "t90_err")
+new_Goldstein_S2_mergers<-Goldstein_S2_mergers;
+ggplot(new_Goldstein_S2_Data[unknown_remover, ], aes(x = t90, y = Peak_E_over_Flu, colour = attr(predicted_svm, "probabilities")[,1])) +ylab(expression(E[p]/S[prompt]~' 10kev-10MeV ('~keV ~ cm^{2} ~ erg^{-1} ~ ', GBM)'))+xlab('t90 (s, GBM)')+scale_colour_gradient2(low = "grey",mid =muted("blue"), high = "black",  midpoint = 0.5, name="Inferred Collapsar\n Probability")+geom_point(data = new_Goldstein_S2_mergers, color = "red")+geom_point(data = new_Goldstein_S2_collapsars, color = "cyan")+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+geom_pointrange(aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err))+geom_pointrange(aes(xmin=t90-t90_err, xmax=t90+t90_err))+geom_pointrange(data=new_Goldstein_S2_mergers, aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err), color = "red")+geom_pointrange(data=new_Goldstein_S2_mergers, aes(xmin=t90-t90_err, xmax=t90+t90_err), color = "red")+geom_pointrange(data=new_Goldstein_S2_collapsars, aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err), color = "cyan") +geom_pointrange(data=new_Goldstein_S2_collapsars, aes(xmin=t90-t90_err, xmax=t90+t90_err), color = "cyan")
 ```
