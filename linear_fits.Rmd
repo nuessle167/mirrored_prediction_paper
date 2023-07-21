@@ -372,8 +372,8 @@ legend("topleft",
 
 ```{r Gehrels Hypothesis, echo=FALSE}
 Gehrels_S3_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_3_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"))
-# actually_usable_mask<-which(log10(Gehrels_S3_Data$`X-ray_F11`)< -(14+log10(8)))
-# Gehrels_S3_Data<-Gehrels_S3_Data[-c(actually_usable_mask), ]
+actually_usable_mask<-which(log10(Gehrels_S3_Data$`X-ray_F11`)< -(14+log10(8)))
+Gehrels_S3_Data<-Gehrels_S3_Data[-c(actually_usable_mask), ]
 # Gehrels_S3_Data<-Gehrels_S3_Data[-c(146), ] #removed an outlier from the linear model
 collapsar_mask=Gehrels_S3_Data$Name %in% Collapsars
 merger_mask=Gehrels_S3_Data$Name %in% Mergers
@@ -433,54 +433,71 @@ preds2 <- predict(modGehrels4, newdata=data.frame(x3=newx2), interval='predictio
 ##
 par(mfrow=c(1,1))
 par(mar=c(5,5,5,5))
-plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
-points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
-points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
-arrows(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`-Gehrels_S3_unknown$Flux_Err, Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`+Gehrels_S3_unknown$Flux_Err, length=0.05, angle=90, code=3)
-arrows(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`-Gehrels_S3_collapsars$Flux_Err, Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`+Gehrels_S3_collapsars$Flux_Err, length=0.05, angle=90, code=3)
-arrows(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`-Gehrels_S3_mergers$Flux_Err, Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`+Gehrels_S3_mergers$Flux_Err, length=0.05, angle=90, code=3)
-arrows(Gehrels_S3_unknown$Prompt_Flu-Gehrels_S3_unknown$Flu_Err, Gehrels_S3_unknown$`X-ray_F11`, Gehrels_S3_unknown$Prompt_Flu+Gehrels_S3_unknown$Flu_Err, Gehrels_S3_unknown$`X-ray_F11`, length=0.05, angle=90, code=3)
-arrows(Gehrels_S3_collapsars$Prompt_Flu-Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, Gehrels_S3_collapsars$Prompt_Flu+Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, length=0.05, angle=90, code=3)
-arrows(Gehrels_S3_mergers$Prompt_Flu-Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, Gehrels_S3_mergers$Prompt_Flu+Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, length=0.05, angle=90, code=3)
-abline(modGehrels3)
-abline(modGehrels4)
-#add dashed lines for confidence bands
-lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'black')
-lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'black')
-lines(10^newx2, 10^preds2[ ,3], lty = 'dashed', col = 'grey')
-lines(10^newx2, 10^preds2[ ,2], lty = 'dashed', col = 'grey')
-legend("bottomright",
-       legend = c('Unknown', 'Mergers', 'Collapsars'),
-       col = c('black', 'red', 'blue'),
-       pch = c(20, 4, 8))
+# plot(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`, pch=20, xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
+# points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
+# points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
+# arrows(Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`-Gehrels_S3_unknown$Flux_Err, Gehrels_S3_unknown$Prompt_Flu, Gehrels_S3_unknown$`X-ray_F11`+Gehrels_S3_unknown$Flux_Err, length=0.05, angle=90, code=3)
+# arrows(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`-Gehrels_S3_collapsars$Flux_Err, Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`+Gehrels_S3_collapsars$Flux_Err, length=0.05, angle=90, code=3)
+# arrows(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`-Gehrels_S3_mergers$Flux_Err, Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`+Gehrels_S3_mergers$Flux_Err, length=0.05, angle=90, code=3)
+# arrows(Gehrels_S3_unknown$Prompt_Flu-Gehrels_S3_unknown$Flu_Err, Gehrels_S3_unknown$`X-ray_F11`, Gehrels_S3_unknown$Prompt_Flu+Gehrels_S3_unknown$Flu_Err, Gehrels_S3_unknown$`X-ray_F11`, length=0.05, angle=90, code=3)
+# arrows(Gehrels_S3_collapsars$Prompt_Flu-Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, Gehrels_S3_collapsars$Prompt_Flu+Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, length=0.05, angle=90, code=3)
+# arrows(Gehrels_S3_mergers$Prompt_Flu-Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, Gehrels_S3_mergers$Prompt_Flu+Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, length=0.05, angle=90, code=3)
+# abline(modGehrels3)
+# abline(modGehrels4)
+# #add dashed lines for confidence bands
+# lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'black')
+# lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'black')
+# lines(10^newx2, 10^preds2[ ,3], lty = 'dashed', col = 'grey')
+# lines(10^newx2, 10^preds2[ ,2], lty = 'dashed', col = 'grey')
+# legend("bottomright",
+#        legend = c('Unknown', 'Mergers', 'Collapsars'),
+#        col = c('black', 'red', 'blue'),
+#        pch = c(20, 4, 8))
+ggplot(Gehrels_S3_unknown, aes(x = Prompt_Flu, y = `X-ray_F11`, colour=runif(1, 0, 1)))+scale_colour_gradient2(low = "black",mid ="black", high = "black",  midpoint = 0.5, name="Burst Types")+ylab(expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'))+xlab(expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'))+geom_point(size = 1)+geom_point(data = Gehrels_S3_mergers, color = "red", pch=4)+geom_point(data = Gehrels_S3_collapsars, color = "blue", pch=8)+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+geom_pointrange(aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err))+geom_pointrange(aes(xmin=Prompt_Flu-Flu_Err, xmax=Prompt_Flu+Flu_Err))+geom_pointrange(data=Gehrels_S3_mergers, aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err), color = "red")+geom_pointrange(data=Gehrels_S3_mergers, aes(xmin=Prompt_Flu-Flu_Err, xmax=Prompt_Flu+Flu_Err), color = "red")+geom_pointrange(data=Gehrels_S3_collapsars, aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err), color = "blue") +geom_pointrange(data=Gehrels_S3_collapsars, aes(xmin=Prompt_Flu-Flu_Err, xmax=Prompt_Flu+Flu_Err), color = "blue")
+plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+legend("bottomright", legend = c('Unknown', 'Mergers', 'Collapsars'), col = c('black', 'red', 'blue'), pch = c(20, 4, 8))
 ##
 # newx <- seq(min(x2), max(x2), length.out=100)
 # preds <- predict(modGehrels, newdata=data.frame(x2=newx), interval='prediction')
 ##
-par(mar=c(5,5,5,5))
-plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
-points(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`, pch=20, col='grey')
-points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
-points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
-arrows(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`-Gehrels_S3_Long$Flux_Err, Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`+Gehrels_S3_Long$Flux_Err, length=0.05, angle=90, code=3, col = 'black')
-arrows(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`-Gehrels_S3_Short$Flux_Err, Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`+Gehrels_S3_Short$Flux_Err, length=0.05, angle=90, code=3, col = 'grey')
-arrows(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`-Gehrels_S3_collapsars$Flux_Err, Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`+Gehrels_S3_collapsars$Flux_Err, length=0.05, angle=90, code=3, col = 'blue')
-arrows(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`-Gehrels_S3_mergers$Flux_Err, Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`+Gehrels_S3_mergers$Flux_Err, length=0.05, angle=90, code=3, col = 'red')
-arrows(Gehrels_S3_Long$Prompt_Flu-Gehrels_S3_Long$Flu_Err, Gehrels_S3_Long$`X-ray_F11`, Gehrels_S3_Long$Prompt_Flu+Gehrels_S3_Long$Flu_Err, Gehrels_S3_Long$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'black')
-arrows(Gehrels_S3_Short$Prompt_Flu-Gehrels_S3_Short$Flu_Err, Gehrels_S3_Short$`X-ray_F11`, Gehrels_S3_Short$Prompt_Flu+Gehrels_S3_Short$Flu_Err, Gehrels_S3_Short$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'grey')
-arrows(Gehrels_S3_collapsars$Prompt_Flu-Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, Gehrels_S3_collapsars$Prompt_Flu+Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'blue')
-arrows(Gehrels_S3_mergers$Prompt_Flu-Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, Gehrels_S3_mergers$Prompt_Flu+Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'red')
-abline(modGehrels3, col='black')
-abline(modGehrels4, col='grey')
+# par(mar=c(5,5,5,5))
+# plot(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`, pch=20, col='black', xlab=expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'), ylab=expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'), log="xy", xlim = c(1e-7, 1e-3), ylim = c(1e-20, 1e-8))
+# points(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`, pch=20, col='grey')
+# points(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`, pch=4, col='red')
+# points(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`, pch=8, col='blue')
+# arrows(Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`-Gehrels_S3_Long$Flux_Err, Gehrels_S3_Long$Prompt_Flu, Gehrels_S3_Long$`X-ray_F11`+Gehrels_S3_Long$Flux_Err, length=0.05, angle=90, code=3, col = 'black')
+# arrows(Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`-Gehrels_S3_Short$Flux_Err, Gehrels_S3_Short$Prompt_Flu, Gehrels_S3_Short$`X-ray_F11`+Gehrels_S3_Short$Flux_Err, length=0.05, angle=90, code=3, col = 'grey')
+# arrows(Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`-Gehrels_S3_collapsars$Flux_Err, Gehrels_S3_collapsars$Prompt_Flu, Gehrels_S3_collapsars$`X-ray_F11`+Gehrels_S3_collapsars$Flux_Err, length=0.05, angle=90, code=3, col = 'blue')
+# arrows(Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`-Gehrels_S3_mergers$Flux_Err, Gehrels_S3_mergers$Prompt_Flu, Gehrels_S3_mergers$`X-ray_F11`+Gehrels_S3_mergers$Flux_Err, length=0.05, angle=90, code=3, col = 'red')
+# arrows(Gehrels_S3_Long$Prompt_Flu-Gehrels_S3_Long$Flu_Err, Gehrels_S3_Long$`X-ray_F11`, Gehrels_S3_Long$Prompt_Flu+Gehrels_S3_Long$Flu_Err, Gehrels_S3_Long$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'black')
+# arrows(Gehrels_S3_Short$Prompt_Flu-Gehrels_S3_Short$Flu_Err, Gehrels_S3_Short$`X-ray_F11`, Gehrels_S3_Short$Prompt_Flu+Gehrels_S3_Short$Flu_Err, Gehrels_S3_Short$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'grey')
+# arrows(Gehrels_S3_collapsars$Prompt_Flu-Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, Gehrels_S3_collapsars$Prompt_Flu+Gehrels_S3_collapsars$Flu_Err, Gehrels_S3_collapsars$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'blue')
+# arrows(Gehrels_S3_mergers$Prompt_Flu-Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, Gehrels_S3_mergers$Prompt_Flu+Gehrels_S3_mergers$Flu_Err, Gehrels_S3_mergers$`X-ray_F11`, length=0.05, angle=90, code=3, col = 'red')
+# abline(modGehrels3, col='black')
+# abline(modGehrels4, col='grey')
 #add dashed lines for confidence bands
-lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'black')
-lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'black')
-lines(10^newx2, 10^preds2[ ,3], lty = 'dashed', col = 'grey')
-lines(10^newx2, 10^preds2[ ,2], lty = 'dashed', col = 'grey')
-legend("bottomright",
-       legend = c('Unknown Long', "Unknown Short", 'Mergers', 'Collapsars'),
-       col = c('black', 'grey', 'red', 'blue'),
-       pch = c(20, 20, 4, 8))
+# lines(10^newx, 10^preds[ ,3], lty = 'dashed', col = 'black')
+# lines(10^newx, 10^preds[ ,2], lty = 'dashed', col = 'black')
+# lines(10^newx2, 10^preds2[ ,3], lty = 'dashed', col = 'grey')
+# lines(10^newx2, 10^preds2[ ,2], lty = 'dashed', col = 'grey')
+# legend("bottomright",
+#        legend = c('Unknown Long', "Unknown Short", 'Mergers', 'Collapsars'),
+#        col = c('black', 'grey', 'red', 'blue'),
+#        pch = c(20, 20, 4, 8))
+low_error_data_long=data.frame(cbind(0, 10^newx, 0, 10^preds[ ,2], 0, 0))
+colnames(low_error_data_long)<-colnames(Gehrels_S3_Data)
+high_error_data_long=data.frame(cbind(0, 10^newx, 0, 10^preds[ ,3], 0, 0))
+colnames(high_error_data_long)<-colnames(Gehrels_S3_Data)
+low_error_data_short=data.frame(cbind(0, 10^newx2, 0, 10^preds2[ ,2], 0, 0))
+colnames(low_error_data_short)<-colnames(Gehrels_S3_Data)
+high_error_data_short=data.frame(cbind(0, 10^newx2, 0, 10^preds2[ ,3], 0, 0))
+colnames(high_error_data_short)<-colnames(Gehrels_S3_Data)
+# Gehrels_errorbar_data=data.frame(rbind(low_error_data_long, high_error_data_long, low_error_data_short, high_error_data_short))
+# colnames(Gehrels_errorbar_data)<-c("Prompt_Flu", "X-ray_F11", "Group")
+##
+ggplot(Gehrels_S3_Long, aes(x = Prompt_Flu, y = `X-ray_F11`, colour=runif(1, 0, 1)), pch=20)+scale_colour_gradient2(low = "black",mid ="black", high = "black",  midpoint = 0.5, name="Burst Types")+geom_errorbar(aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err))+geom_errorbar(aes(xmin=Prompt_Flu-Flu_Err, xmax=Prompt_Flu+Flu_Err))+ylab(expression('Afterglow '~Flux[11~Hr.]~' 0.3-10 keV (erg'~cm^{-2}~s^{-1}~', XRT)'))+xlab(expression('Prompt Fluence 10kev-10MeV (erg'~cm^{-2}~', GBM)'))+geom_point(size = 1)+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+geom_point(data = high_error_data_long, color = "black", pch=1)+geom_point(data = low_error_data_long, color = "black", pch=1)+geom_point(data = Gehrels_S3_Short, color = "grey", pch=20)+geom_point(data = high_error_data_short, color = "grey", pch=1)+geom_point(data = low_error_data_short, color = "grey", pch=1)+geom_point(data = Gehrels_S3_mergers, color = "red", pch=4)+geom_point(data = Gehrels_S3_collapsars, color = "blue", pch=8)#+geom_pointrange(data=Gehrels_S3_Short, aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err), color = "grey", pch=20)+geom_pointrange(data=Gehrels_S3_Short, aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err), color = "grey", pch=20)+geom_pointrange(data=Gehrels_S3_mergers, aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err), color = "red", pch=4)+geom_pointrange(data=Gehrels_S3_mergers, aes(xmin=Prompt_Flu-Flu_Err, xmax=Prompt_Flu+Flu_Err), color = "red", pch=4)+geom_pointrange(data=Gehrels_S3_collapsars, aes(ymin=`X-ray_F11`-Flux_Err, ymax=`X-ray_F11`-Flux_Err), color = "blue", pch=8) +geom_pointrange(data=Gehrels_S3_collapsars, aes(xmin=Prompt_Flu-Flu_Err, xmax=Prompt_Flu+Flu_Err), color = "blue", pch=8)+geom_abline(intercept=modGehrels3$coefficients[1], slope=modGehrels3$coefficients[2], color='black', linetype="dashed")+geom_abline(intercept=modGehrels4$coefficients[1], slope=modGehrels4$coefficients[2], color='grey', linetype="dashed")
+plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+legend("bottomright", legend = c('Unknown Long', 'Unknown Short', 'Mergers', 'Collapsars'), col = c('black', 'grey', 'red', 'blue'), pch = c(20, 20, 4, 8))
 10^confint(modGehrels, 'x', level=0.99)
 ####
 # Gehrels_S6_Data <- read_excel("/Users/nnuessle/Documents/Work/burst_matching_algorithm/actual_paper/prompt-and-afterglow-matching/Gehrels_Sample_6_Data.xlsx", col_types = c("skip", "numeric", "numeric", "numeric", "numeric"))
@@ -746,14 +763,17 @@ long_mask=which(Goldstein_S2_unknown$t90>4.2)
 short_mask=which(Goldstein_S2_unknown$t90<=4.2)
 Goldstein_S2_Long=Goldstein_S2_unknown[long_mask, ]
 Goldstein_S2_Short=Goldstein_S2_unknown[short_mask, ]
-plot(Goldstein_S2_Long$t90, Goldstein_S2_Long$`Peak E. over Flue.`, pch=20, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy", xlim=c(1e-2, 1e3))
-points(Goldstein_S2_Short$t90, Goldstein_S2_Short$`Peak E. over Flue.`, pch=20, col='grey')
-points(Goldstein_S2_mergers$t90, Goldstein_S2_mergers$`Peak E. over Flue.`, pch=4, col='red')
-points(Goldstein_S2_collapsars$t90, Goldstein_S2_collapsars$`Peak E. over Flue.`, pch=8, col='blue')
-legend("topleft",
-       legend = c('Unknown Long', 'Unknown Short', "Mergers", 'Collapsars'),
-       col = c('black', 'grey', 'red', 'blue'),
-       pch = c(20, 20, 4, 8))
+# plot(Goldstein_S2_Long$t90, Goldstein_S2_Long$`Peak E. over Flue.`, pch=20, ylab=expression(E[p]/S[prompt]~' 10kev-10MeV ('~erg ~ cm^{2} ~ erg^{-1} ~ ', GBM)'), xlab='t90 (s, GBM)', log="xy", xlim=c(1e-2, 1e3))
+# points(Goldstein_S2_Short$t90, Goldstein_S2_Short$`Peak E. over Flue.`, pch=20, col='grey')
+# points(Goldstein_S2_mergers$t90, Goldstein_S2_mergers$`Peak E. over Flue.`, pch=4, col='red')
+# points(Goldstein_S2_collapsars$t90, Goldstein_S2_collapsars$`Peak E. over Flue.`, pch=8, col='blue')
+# legend("topleft",
+#        legend = c('Unknown Long', 'Unknown Short', "Mergers", 'Collapsars'),
+#        col = c('black', 'grey', 'red', 'blue'),
+#        pch = c(20, 20, 4, 8))
+ggplot(Goldstein_S2_Long, aes(x = t90, y = `Peak E. over Flue.`, colour = runif(1, 0, 1)))+geom_point(size = 1)+ylab(expression(E[p]/S[prompt]~' 10kev-10MeV ('~keV ~ cm^{2} ~ erg^{-1} ~ ', GBM)'))+xlab('t90 (s, GBM)')+geom_point(data = Goldstein_S2_Short, color = "grey")+scale_colour_gradient2(low = "black",mid ="black", high = "black",  midpoint = 0.5, name="Burst Types")+geom_point(data = Goldstein_S2_mergers, pch=4, color = "red")+geom_point(data = Goldstein_S2_collapsars, pch=8, color ='blue')+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+legend("topleft", title='Burst Types', legend = c('Unknown Long', 'Unknown Short', "Mergers", 'Collapsars'), col = c('black', 'grey', 'red', 'blue'), pch = c(20, 20, 4, 8))
 ##
 missing<-which(!complete.cases(Goldstein_S2_Data))
 no_NA_Goldstein_S2_Data<- Goldstein_S2_Data[-missing, ]
@@ -892,5 +912,5 @@ new_Goldstein_S2_collapsars<-Goldstein_S2_collapsars;
 # new_Goldstein_S2_collapsars$t90_err<-log10(new_Goldstein_S2_collapsars$t90_err)
 colnames(Goldstein_S2_mergers)<-c("Name", "Peak_E_over_Flu", "Peak_E_over_Flu_err", "`Hardness Ratio`", "t90", "t90_err")
 new_Goldstein_S2_mergers<-Goldstein_S2_mergers;
-ggplot(new_Goldstein_S2_Data[unknown_remover, ], aes(x = t90, y = Peak_E_over_Flu, colour = attr(predicted_svm, "probabilities")[,1])) +ylab(expression(E[p]/S[prompt]~' 10kev-10MeV ('~keV ~ cm^{2} ~ erg^{-1} ~ ', GBM)'))+xlab('t90 (s, GBM)')+scale_colour_gradient2(low = "grey",mid =muted("blue"), high = "black",  midpoint = 0.5, name="Inferred Collapsar\n Probability")+geom_point(data = new_Goldstein_S2_mergers, color = "red")+geom_point(data = new_Goldstein_S2_collapsars, color = "cyan")+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+geom_pointrange(aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err))+geom_pointrange(aes(xmin=t90-t90_err, xmax=t90+t90_err))+geom_pointrange(data=new_Goldstein_S2_mergers, aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err), color = "red")+geom_pointrange(data=new_Goldstein_S2_mergers, aes(xmin=t90-t90_err, xmax=t90+t90_err), color = "red")+geom_pointrange(data=new_Goldstein_S2_collapsars, aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err), color = "cyan") +geom_pointrange(data=new_Goldstein_S2_collapsars, aes(xmin=t90-t90_err, xmax=t90+t90_err), color = "cyan")
+ggplot(new_Goldstein_S2_Data[unknown_remover, ], aes(x = t90, y = Peak_E_over_Flu, colour = attr(predicted_svm, "probabilities")[,1])) +ylab(expression(E[p]/S[prompt]~' 10kev-10MeV ('~keV ~ cm^{2} ~ erg^{-1} ~ ', GBM)'))+xlab('t90 (s, GBM)')+scale_colour_gradient2(low = "grey",mid =muted("blue"), high = "black",  midpoint = 0.5, name="Inferred Collapsar\n Probability")+geom_point(data = new_Goldstein_S2_mergers, color = "red")+geom_point(data = new_Goldstein_S2_collapsars, color = "cyan")+scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+geom_errorbar(aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err))+geom_errorbar(aes(xmin=t90-t90_err, xmax=t90+t90_err))+geom_errorbar(data=new_Goldstein_S2_mergers, aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err), color = "red")+geom_errorbar(data=new_Goldstein_S2_mergers, aes(xmin=t90-t90_err, xmax=t90+t90_err), color = "red")+geom_errorbar(data=new_Goldstein_S2_collapsars, aes(ymin=Peak_E_over_Flu-Peak_E_over_Flu_err, ymax=Peak_E_over_Flu+Peak_E_over_Flu_err), color = "cyan") +geom_errorbar(data=new_Goldstein_S2_collapsars, aes(xmin=t90-t90_err, xmax=t90+t90_err), color = "cyan")
 ```
